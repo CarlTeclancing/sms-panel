@@ -8,6 +8,30 @@ class ServiceRepository
         return $stmt->fetchAll();
     }
 
+    public function topActive(int $limit): array
+    {
+        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 ORDER BY name LIMIT ?');
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function paginateActive(int $limit, int $offset): array
+    {
+        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 ORDER BY name LIMIT ? OFFSET ?');
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function countActive(): int
+    {
+        $stmt = db()->query('SELECT COUNT(*) AS total FROM services WHERE active = 1');
+        $row = $stmt->fetch();
+        return (int)($row['total'] ?? 0);
+    }
+
     public function updatePrice(int $id, float $price): void
     {
         $stmt = db()->prepare('UPDATE services SET price = ? WHERE id = ?');

@@ -1,5 +1,5 @@
 <div class="grid lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2">
+    <div class="lg:col-span-2 space-y-6">
         <h2 class="text-2xl font-semibold">Recent Purchases</h2>
         <div class="mt-4 bg-slate-50 border border-slate-200 rounded">
             <table class="w-full text-sm">
@@ -33,6 +33,38 @@
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+        <div>
+            <h2 class="text-2xl font-semibold">Boosting Orders</h2>
+            <div class="mt-4 bg-slate-50 border border-slate-200 rounded">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left border-b border-slate-200">
+                            <th class="p-3">Service</th>
+                            <th class="p-3">Quantity</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Charge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($socialOrders)): ?>
+                            <tr><td class="p-3 text-slate-500" colspan="4">No boosting orders yet.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($socialOrders as $order): ?>
+                                <tr class="border-b border-slate-100">
+                                    <td class="p-3">
+                                        <div class="font-medium"><?= htmlspecialchars($order['service_name'] ?? 'Service') ?></div>
+                                        <div class="text-xs text-slate-500"><?= htmlspecialchars($order['service_category'] ?? '') ?></div>
+                                    </td>
+                                    <td class="p-3"><?= (int)$order['quantity'] ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($order['status']) ?></td>
+                                    <td class="p-3">$<?= number_format((float)($order['charge'] ?? 0), 4) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     <div>

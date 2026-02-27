@@ -2,18 +2,20 @@
 $sidebarItems = [
     ['label' => 'Dashboard', 'href' => '/admin', 'icon' => 'layout-dashboard'],
     ['label' => 'Services', 'href' => '/admin/services', 'icon' => 'smartphone'],
+    ['label' => 'Boosting Services', 'href' => '/admin/boosting-services', 'icon' => 'rocket'],
     ['label' => 'Users', 'href' => '/admin/users', 'icon' => 'users'],
     ['label' => 'Transactions', 'href' => '/admin/transactions', 'icon' => 'receipt'],
     ['label' => 'API Keys', 'href' => '/admin/api-keys', 'icon' => 'key'],
+    ['label' => 'Tickets', 'href' => '/admin/tickets', 'icon' => 'life-buoy'],
     ['label' => 'Notifications', 'href' => '/admin/notifications', 'icon' => 'bell'],
     ['label' => 'Settings', 'href' => '/admin/settings', 'icon' => 'settings'],
 ];
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-[75vh] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-    <aside id="adminSidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col">
-        <div class="p-5 border-b border-slate-200 flex items-center space-x-3">
+<div class="flex h-[75vh] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col min-h-0 overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
+        <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
             <?php endif; ?>
@@ -21,6 +23,7 @@ $currentPath = current_path();
                 <p class="text-lg font-semibold text-slate-900">Admin Panel</p>
                 <p class="text-xs text-slate-500">GetSMS Control</p>
             </div>
+            <button id="closeSidebar" class="md:hidden border border-slate-200 rounded px-2 py-1 text-xs">Close</button>
         </div>
         <nav class="flex-1 p-4 space-y-1">
             <?php foreach ($sidebarItems as $item): ?>
@@ -33,8 +36,8 @@ $currentPath = current_path();
         </nav>
     </aside>
 
-    <div class="flex-1">
-        <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="flex-1 min-h-0 overflow-y-auto">
+        <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sticky top-0 z-10">
             <div class="flex items-center space-x-3">
                 <button id="toggleSidebar" class="lg:hidden border border-slate-200 rounded px-3 py-1 text-sm">Menu</button>
                 <div>
@@ -84,12 +87,41 @@ $currentPath = current_path();
     </div>
 </div>
 
+<?php
+    $adminNavItems = [
+        ['href' => '/admin', 'label' => 'Home', 'icon' => 'layout-dashboard'],
+        ['href' => '/admin/services', 'label' => 'SMS', 'icon' => 'smartphone'],
+        ['href' => '/admin/boosting-services', 'label' => 'Boost', 'icon' => 'rocket'],
+        ['href' => '/admin/users', 'label' => 'Users', 'icon' => 'users'],
+        ['href' => '/admin/settings', 'label' => 'Settings', 'icon' => 'settings'],
+    ];
+?>
+<nav class="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-white/90 backdrop-blur border border-slate-200 shadow-lg rounded-2xl z-50">
+    <div class="grid grid-cols-5 text-[11px]">
+        <?php foreach ($adminNavItems as $item): ?>
+            <?php $isActive = $currentPath === $item['href']; ?>
+            <a href="<?= url($item['href']) ?>" class="flex flex-col items-center justify-center py-2.5 px-1 rounded-2xl <?= $isActive ? 'text-primary' : 'text-slate-500' ?>">
+                <div class="w-9 h-9 flex items-center justify-center rounded-xl <?= $isActive ? 'bg-primary/10' : '' ?>">
+                    <i data-lucide="<?= htmlspecialchars($item['icon']) ?>" class="w-5 h-5"></i>
+                </div>
+                <span class="mt-1 font-medium"><?= htmlspecialchars($item['label']) ?></span>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</nav>
+
 <script>
     const toggleButton = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('adminSidebar');
+    const closeSidebar = document.getElementById('closeSidebar');
     if (toggleButton && sidebar) {
         toggleButton.addEventListener('click', () => {
             sidebar.classList.toggle('hidden');
+        });
+    }
+    if (closeSidebar && sidebar) {
+        closeSidebar.addEventListener('click', () => {
+            sidebar.classList.add('hidden');
         });
     }
 

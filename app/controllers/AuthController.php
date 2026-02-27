@@ -13,6 +13,7 @@ class AuthController
     {
         render('auth/register', [
             'title' => 'Create Account',
+            'referralCode' => trim($_GET['ref'] ?? ''),
         ]);
     }
 
@@ -22,6 +23,7 @@ class AuthController
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
+        $referralCode = trim($_POST['referral_code'] ?? '');
 
         if (!$name || !$email || !$password) {
             flash('error', 'All fields are required.');
@@ -33,12 +35,28 @@ class AuthController
             redirect('/register');
         }
 
+        $referrer = null;
+        if ($referralCode) {
+            $referrer = $this->users->findByReferralCode($referralCode);
+        }
+
+        $refCode = null;
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = strtoupper(bin2hex(random_bytes(4)));
+            if (!$this->users->findByReferralCode($candidate)) {
+                $refCode = $candidate;
+                break;
+            }
+        }
+
         $userId = $this->users->create([
             'name' => $name,
             'email' => $email,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
             'role' => 'user',
             'balance' => 0,
+            'referral_code' => $refCode,
+            'referred_by' => $referrer['id'] ?? null,
         ]);
 
         $_SESSION['user'] = $this->users->findById($userId);

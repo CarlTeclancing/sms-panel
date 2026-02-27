@@ -3,18 +3,22 @@
 class AdminController
 {
     private ServiceRepository $services;
+    private SocialServiceRepository $socialServices;
     private UserRepository $users;
     private TransactionRepository $transactions;
     private ApiKeyRepository $apiKeys;
     private SettingsRepository $settings;
+    private TicketRepository $tickets;
 
     public function __construct()
     {
         $this->services = new ServiceRepository();
+        $this->socialServices = new SocialServiceRepository();
         $this->users = new UserRepository();
         $this->transactions = new TransactionRepository();
         $this->apiKeys = new ApiKeyRepository();
         $this->settings = new SettingsRepository();
+        $this->tickets = new TicketRepository();
     }
 
     public function dashboard(): void
@@ -49,13 +53,49 @@ class AdminController
     public function services(): void
     {
         $this->autoSyncServices();
-        $services = $this->services->allActive();
+        $perPage = 20;
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $totalServices = $this->services->countActive();
+        $totalPages = max(1, (int)ceil($totalServices / $perPage));
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+        $offset = ($page - 1) * $perPage;
+        $services = $this->services->paginateActive($perPage, $offset);
         $logo = $this->settings->get('logo_path');
         render('admin/services', [
             'title' => 'Manage Services',
             'services' => $services,
             'logo' => $logo,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalServices' => $totalServices,
+            'perPage' => $perPage,
         ]);
+    }
+
+    public function boostingServices(): void
+    {
+        $this->autoSyncBoostingServices();
+        $services = $this->socialServices->allActive();
+        $logo = $this->settings->get('logo_path');
+        render('admin/boosting-services', [
+            'title' => 'Boosting Services',
+            'services' => $services,
+            'logo' => $logo,
+        ]);
+    }
+
+    public function syncBoostingServices(): void
+    {
+        verify_csrf();
+        $count = $this->syncBoostingServicesInternal();
+        if ($count === null) {
+            flash('error', 'Failed to fetch boosting services from Peakerr.');
+            redirect('/admin/boosting-services');
+        }
+        flash('success', "Synced {$count} boosting services from Peakerr.");
+        redirect('/admin/boosting-services');
     }
 
     public function syncServices(): void
@@ -134,6 +174,34 @@ class AdminController
         return $count;
     }
 
+    private function autoSyncBoostingServices(): void
+    {
+        $lastSync = $this->settings->get('peakerr_services_last_sync');
+        $lastSyncTs = $lastSync ? strtotime($lastSync) : 0;
+        $now = time();
+
+        if ($now - $lastSyncTs < 3600) {
+            return;
+        }
+
+        $this->syncBoostingServicesInternal();
+    }
+
+    private function syncBoostingServicesInternal(): ?int
+    {
+        $config = app_config();
+        $client = new PeakerrClient($config['peakerr']);
+        $services = $client->services();
+
+        if (!is_array($services) || isset($services['error']) || isset($services['success'])) {
+            return null;
+        }
+
+        $count = $this->socialServices->upsertFromPeakerr($services);
+        $this->settings->set('peakerr_services_last_sync', date('c'));
+        return $count;
+    }
+
     public function users(): void
     {
         $users = $this->users->all();
@@ -182,12 +250,27 @@ class AdminController
         ]);
     }
 
+    public function tickets(): void
+    {
+        $logo = $this->settings->get('logo_path');
+        $tickets = $this->tickets->all();
+        render('admin/tickets', [
+            'title' => 'Support Tickets',
+            'tickets' => $tickets,
+            'logo' => $logo,
+        ]);
+    }
+
     public function settingsPage(): void
     {
         $logo = $this->settings->get('logo_path');
+        $smsMarkup = $this->settings->get('sms_markup_percent') ?? '0';
+        $boostMarkup = $this->settings->get('boost_markup_percent') ?? '0';
         render('admin/settings', [
             'title' => 'Settings',
             'logo' => $logo,
+            'smsMarkup' => $smsMarkup,
+            'boostMarkup' => $boostMarkup,
         ]);
     }
 
@@ -287,7 +370,13 @@ class AdminController
     public function settings(): void
     {
         verify_csrf();
+        $smsMarkup = (float)($_POST['sms_markup_percent'] ?? 0);
+        $boostMarkup = (float)($_POST['boost_markup_percent'] ?? 0);
 
+        $this->settings->set('sms_markup_percent', (string)$smsMarkup);
+        $this->settings->set('boost_markup_percent', (string)$boostMarkup);
+
+        $updatedLogo = false;
         if (!empty($_FILES['logo']['name'])) {
             $uploadDir = __DIR__ . '/../../public/uploads';
             if (!is_dir($uploadDir)) {
@@ -299,12 +388,15 @@ class AdminController
             $target = $uploadDir . '/' . $filename;
             if (move_uploaded_file($_FILES['logo']['tmp_name'], $target)) {
                 $this->settings->set('logo_path', '/uploads/' . $filename);
-                flash('success', 'Logo updated.');
-                redirect('/admin');
+                $updatedLogo = true;
             }
         }
 
-        flash('error', 'Logo upload failed.');
-        redirect('/admin');
+        if ($updatedLogo) {
+            flash('success', 'Settings updated.');
+        } else {
+            flash('success', 'Settings updated.');
+        }
+        redirect('/admin/settings');
     }
 }

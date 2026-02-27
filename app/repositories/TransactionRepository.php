@@ -89,4 +89,12 @@ class TransactionRepository
         $stmt->execute([$days]);
         return $stmt->fetchAll();
     }
+
+    public function referralEarnings(int $userId): float
+    {
+        $stmt = db()->prepare("SELECT SUM(amount) AS total FROM transactions WHERE user_id = ? AND provider = 'referral' AND status = 'success'");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch();
+        return (float)($row['total'] ?? 0);
+    }
 }

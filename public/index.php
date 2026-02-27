@@ -5,10 +5,14 @@ require __DIR__ . '/../app/db.php';
 require __DIR__ . '/../app/helpers.php';
 require __DIR__ . '/../app/services/SmsManClient.php';
 require __DIR__ . '/../app/services/FapshiClient.php';
+require __DIR__ . '/../app/services/PeakerrClient.php';
 require __DIR__ . '/../app/repositories/UserRepository.php';
 require __DIR__ . '/../app/repositories/ServiceRepository.php';
+require __DIR__ . '/../app/repositories/SocialServiceRepository.php';
 require __DIR__ . '/../app/repositories/PurchaseRepository.php';
+require __DIR__ . '/../app/repositories/SocialOrderRepository.php';
 require __DIR__ . '/../app/repositories/TransactionRepository.php';
+require __DIR__ . '/../app/repositories/TicketRepository.php';
 require __DIR__ . '/../app/repositories/ApiKeyRepository.php';
 require __DIR__ . '/../app/repositories/SettingsRepository.php';
 require __DIR__ . '/../app/controllers/AuthController.php';
@@ -35,8 +39,24 @@ $webhookController = new WebhookController();
 
 if ($path === '/' || $path === '/index.php') {
     $serviceRepo = new ServiceRepository();
-    $services = $serviceRepo->allActive();
-    render('home', ['title' => 'GetSMS', 'services' => $services]);
+    $services = $serviceRepo->topActive(20);
+    $smsMarkup = setting('sms_markup_percent', '0');
+    foreach ($services as &$service) {
+        $service['display_price'] = price_with_markup((float)$service['price'], $smsMarkup);
+    }
+    unset($service);
+    $socialRepo = new SocialServiceRepository();
+    $smmServices = $socialRepo->topActive(12);
+    $boostMarkup = setting('boost_markup_percent', '0');
+    foreach ($smmServices as &$smmService) {
+        $smmService['display_rate'] = price_with_markup((float)$smmService['rate'], $boostMarkup);
+    }
+    unset($smmService);
+    render('home', [
+        'title' => 'GetSMS',
+        'services' => $services,
+        'smmServices' => $smmServices,
+    ]);
     exit;
 }
 
@@ -73,15 +93,57 @@ if ($path === '/services') {
     exit;
 }
 
+if ($path === '/boosting') {
+    require_auth();
+    $userController->boosting();
+    exit;
+}
+
 if ($path === '/purchase' && $method === 'POST') {
     require_auth();
     $userController->purchase();
     exit;
 }
 
+if ($path === '/boost/order' && $method === 'POST') {
+    require_auth();
+    $userController->boostOrder();
+    exit;
+}
+
 if ($path === '/wallet' && $method === 'GET') {
     require_auth();
     $userController->wallet();
+    exit;
+}
+
+if ($path === '/profile' && $method === 'GET') {
+    require_auth();
+    $userController->profile();
+    exit;
+}
+
+if ($path === '/profile/update' && $method === 'POST') {
+    require_auth();
+    $userController->updateProfile();
+    exit;
+}
+
+if ($path === '/profile/password' && $method === 'POST') {
+    require_auth();
+    $userController->updatePassword();
+    exit;
+}
+
+if ($path === '/help' && $method === 'GET') {
+    require_auth();
+    $userController->help();
+    exit;
+}
+
+if ($path === '/help/ticket' && $method === 'POST') {
+    require_auth();
+    $userController->submitTicket();
     exit;
 }
 
@@ -115,6 +177,27 @@ if ($path === '/admin/services/sync' && $method === 'POST') {
     require_auth();
     require_admin();
     $adminController->syncServices();
+    exit;
+}
+
+if ($path === '/admin/boosting-services') {
+    require_auth();
+    require_admin();
+    $adminController->boostingServices();
+    exit;
+}
+
+if ($path === '/admin/boosting-services/sync' && $method === 'POST') {
+    require_auth();
+    require_admin();
+    $adminController->syncBoostingServices();
+    exit;
+}
+
+if ($path === '/admin/tickets') {
+    require_auth();
+    require_admin();
+    $adminController->tickets();
     exit;
 }
 

@@ -59,6 +59,11 @@ class ApiController
     {
         $this->requireApiAuth();
         $services = $this->services->allActive();
+        $smsMarkup = setting('sms_markup_percent', '0');
+        foreach ($services as &$service) {
+            $service['price'] = price_with_markup((float)$service['price'], $smsMarkup);
+        }
+        unset($service);
         $this->json(['services' => $services]);
     }
 
@@ -83,7 +88,8 @@ class ApiController
             $this->json(['success' => false, 'message' => 'Service not found'], 404);
         }
 
-        $cost = (float)$service['price'];
+        $smsMarkup = setting('sms_markup_percent', '0');
+        $cost = price_with_markup((float)$service['price'], $smsMarkup);
         if ((float)$user['balance'] < $cost) {
             $this->json(['success' => false, 'message' => 'Insufficient balance'], 402);
         }

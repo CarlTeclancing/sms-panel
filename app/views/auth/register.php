@@ -2,6 +2,9 @@
     <h2 class="text-2xl font-semibold">Create your account</h2>
     <form method="post" action="<?= url('/register') ?>" class="mt-6 space-y-4">
         <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+        <?php if (!empty($referralCode)): ?>
+            <input type="hidden" name="referral_code" value="<?= htmlspecialchars($referralCode) ?>">
+        <?php endif; ?>
         <div>
             <label class="block text-sm font-medium text-slate-700">Name</label>
             <input name="name" type="text" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>

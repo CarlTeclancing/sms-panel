@@ -114,3 +114,12 @@ function setting(string $name, ?string $default = null): ?string
     }
     return $row['value'] ?? $default;
 }
+
+function price_with_markup(float $amount, ?string $percent = null): float
+{
+    $percentValue = is_numeric($percent) ? (float)$percent : 0.0;
+    if ($percentValue <= 0) {
+        return $amount;
+    }
+    return $amount * (1 + ($percentValue / 100));
+}

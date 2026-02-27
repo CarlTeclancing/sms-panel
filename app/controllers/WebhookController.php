@@ -39,6 +39,25 @@ class WebhookController
         if ($isSuccess) {
             $creditAmount = $amount > 0 ? $amount : (float)$tx['amount'];
             $this->users->incrementBalance((int)$tx['user_id'], $creditAmount);
+
+            $user = $this->users->findById((int)$tx['user_id']);
+            if ($user && empty($user['first_deposit_at'])) {
+                $this->users->markFirstDeposit((int)$tx['user_id']);
+                if (!empty($user['referred_by']) && (int)$user['referral_rewarded'] !== 1) {
+                    $referrerId = (int)$user['referred_by'];
+                    $this->users->incrementBalance($referrerId, 1.00);
+                    $this->transactions->create([
+                        'user_id' => $referrerId,
+                        'type' => 'adjustment',
+                        'amount' => 1.00,
+                        'ref' => 'referral-' . $tx['user_id'] . '-' . $tx['id'],
+                        'provider' => 'referral',
+                        'status' => 'success',
+                        'meta' => json_encode(['referred_user_id' => (int)$tx['user_id']]),
+                    ]);
+                    $this->users->markReferralRewarded((int)$tx['user_id']);
+                }
+            }
         }
 
         $this->json(['success' => true]);

@@ -42,4 +42,8 @@ return [
         'base_url' => 'https://api.fapshi.com',
         'api_key' => getenv('FAPSHI_API_KEY') ?: '',
     ],
+    'peakerr' => [
+        'base_url' => 'https://peakerr.com/api/v2',
+        'api_key' => getenv('PEAKERR_API_KEY') ?: '',
+    ],
 ];
