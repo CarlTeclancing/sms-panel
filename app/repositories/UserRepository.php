@@ -26,15 +26,28 @@ class UserRepository
         return $user ?: null;
     }
 
+    public function findByStoreSlug(string $slug): ?array
+    {
+        $stmt = db()->prepare('SELECT * FROM users WHERE store_slug = ? LIMIT 1');
+        $stmt->execute([$slug]);
+        $user = $stmt->fetch();
+        return $user ?: null;
+    }
+
     public function create(array $data): int
     {
-        $stmt = db()->prepare('INSERT INTO users (name, email, password_hash, role, balance, profile_image, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $balanceTopup = (float)($data['balance_topup'] ?? ($data['balance'] ?? 0));
+        $balanceEarnings = (float)($data['balance_earnings'] ?? 0);
+        $totalBalance = $balanceTopup + $balanceEarnings;
+        $stmt = db()->prepare('INSERT INTO users (name, email, password_hash, role, balance, balance_topup, balance_earnings, profile_image, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $data['name'],
             $data['email'],
             $data['password_hash'],
             $data['role'] ?? 'user',
-            $data['balance'] ?? 0,
+            $totalBalance,
+            $balanceTopup,
+            $balanceEarnings,
             $data['profile_image'] ?? null,
             $data['referral_code'] ?? null,
             $data['referred_by'] ?? null,
@@ -44,7 +57,7 @@ class UserRepository
 
     public function all(): array
     {
-        $stmt = db()->query('SELECT id, name, email, role, balance, active, created_at FROM users ORDER BY id DESC');
+        $stmt = db()->query('SELECT id, name, email, role, balance, balance_topup, balance_earnings, active, created_at FROM users ORDER BY id DESC');
         return $stmt->fetchAll();
     }
 
@@ -54,10 +67,28 @@ class UserRepository
         $stmt->execute([$balance, $userId]);
     }
 
-    public function incrementBalance(int $userId, float $amount): void
+    public function updateTopupBalance(int $userId, float $balanceTopup): void
     {
-        $stmt = db()->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
-        $stmt->execute([$amount, $userId]);
+        $stmt = db()->prepare('UPDATE users SET balance_topup = ?, balance = balance_earnings + ? WHERE id = ?');
+        $stmt->execute([$balanceTopup, $balanceTopup, $userId]);
+    }
+
+    public function updateEarningsBalance(int $userId, float $balanceEarnings): void
+    {
+        $stmt = db()->prepare('UPDATE users SET balance_earnings = ?, balance = balance_topup + ? WHERE id = ?');
+        $stmt->execute([$balanceEarnings, $balanceEarnings, $userId]);
+    }
+
+    public function incrementTopupBalance(int $userId, float $amount): void
+    {
+        $stmt = db()->prepare('UPDATE users SET balance_topup = balance_topup + ?, balance = balance + ? WHERE id = ?');
+        $stmt->execute([$amount, $amount, $userId]);
+    }
+
+    public function incrementEarningsBalance(int $userId, float $amount): void
+    {
+        $stmt = db()->prepare('UPDATE users SET balance_earnings = balance_earnings + ?, balance = balance + ? WHERE id = ?');
+        $stmt->execute([$amount, $amount, $userId]);
     }
 
     public function updateProfile(int $userId, string $name, string $email, string $role): void
@@ -76,6 +107,12 @@ class UserRepository
 
         $stmt = db()->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?');
         $stmt->execute([$name, $email, $userId]);
+    }
+
+    public function updateStoreProfile(int $userId, string $storeName, string $storeSlug, string $storeTagline, string $storeDescription): void
+    {
+        $stmt = db()->prepare('UPDATE users SET store_name = ?, store_slug = ?, store_tagline = ?, store_description = ? WHERE id = ?');
+        $stmt->execute([$storeName, $storeSlug, $storeTagline, $storeDescription, $userId]);
     }
 
     public function updatePassword(int $userId, string $passwordHash): void

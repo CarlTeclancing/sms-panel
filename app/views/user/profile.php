@@ -7,6 +7,7 @@
     <div class="grid md:grid-cols-[220px_1fr] gap-6">
         <aside class="bg-white border border-slate-200 rounded p-4 space-y-2">
             <button class="profile-tab w-full text-left px-3 py-2 rounded text-sm font-medium bg-primary/10 text-primary" data-tab="profile-info">Profile info</button>
+            <button class="profile-tab w-full text-left px-3 py-2 rounded text-sm font-medium text-slate-600 hover:bg-slate-50" data-tab="store">Store</button>
             <button class="profile-tab w-full text-left px-3 py-2 rounded text-sm font-medium text-slate-600 hover:bg-slate-50" data-tab="referrals">Referrals</button>
             <button class="profile-tab w-full text-left px-3 py-2 rounded text-sm font-medium text-slate-600 hover:bg-slate-50" data-tab="password">Password</button>
         </aside>
@@ -40,6 +41,40 @@
                         </div>
                     </div>
                     <button class="bg-primary text-white px-4 py-2 rounded">Save changes</button>
+                </form>
+            </section>
+
+            <section id="store" class="profile-panel hidden bg-white border border-slate-200 rounded p-5">
+                <h3 class="text-lg font-semibold">Store branding</h3>
+                <p class="text-sm text-slate-500 mt-1">Customize your public store and share the link with buyers.</p>
+                <?php if (!empty($storeUrl)): ?>
+                    <div class="mt-4 border border-slate-200 rounded p-4">
+                        <p class="text-xs text-slate-500">Store link</p>
+                        <input readonly class="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-sm" value="<?= htmlspecialchars($storeUrl) ?>">
+                    </div>
+                <?php endif; ?>
+                <form method="post" action="<?= url('/profile/store') ?>" class="mt-4 space-y-4">
+                    <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium">Store name</label>
+                            <input name="store_name" type="text" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars(current_user()['store_name'] ?? current_user()['name'] ?? '') ?>" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Store URL slug</label>
+                            <input name="store_slug" type="text" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" placeholder="my-store" value="<?= htmlspecialchars(current_user()['store_slug'] ?? '') ?>">
+                            <p class="text-xs text-slate-500 mt-1">Only letters, numbers, and hyphens.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Tagline</label>
+                        <input name="store_tagline" type="text" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars(current_user()['store_tagline'] ?? '') ?>">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Store description</label>
+                        <textarea name="store_description" rows="4" class="mt-1 w-full border border-slate-300 rounded px-3 py-2"><?= htmlspecialchars(current_user()['store_description'] ?? '') ?></textarea>
+                    </div>
+                    <button class="bg-primary text-white px-4 py-2 rounded">Save store</button>
                 </form>
             </section>
 

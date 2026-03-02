@@ -4,13 +4,13 @@ class ServiceRepository
 {
     public function allActive(): array
     {
-        $stmt = db()->query('SELECT * FROM services WHERE active = 1 ORDER BY name');
+        $stmt = db()->query('SELECT * FROM services WHERE active = 1 AND price > 0 ORDER BY name');
         return $stmt->fetchAll();
     }
 
     public function topActive(int $limit): array
     {
-        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 ORDER BY name LIMIT ?');
+        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 AND price > 0 ORDER BY name LIMIT ?');
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -18,7 +18,7 @@ class ServiceRepository
 
     public function paginateActive(int $limit, int $offset): array
     {
-        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 ORDER BY name LIMIT ? OFFSET ?');
+        $stmt = db()->prepare('SELECT * FROM services WHERE active = 1 AND price > 0 ORDER BY name LIMIT ? OFFSET ?');
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
         $stmt->bindValue(2, $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -27,7 +27,7 @@ class ServiceRepository
 
     public function countActive(): int
     {
-        $stmt = db()->query('SELECT COUNT(*) AS total FROM services WHERE active = 1');
+        $stmt = db()->query('SELECT COUNT(*) AS total FROM services WHERE active = 1 AND price > 0');
         $row = $stmt->fetch();
         return (int)($row['total'] ?? 0);
     }

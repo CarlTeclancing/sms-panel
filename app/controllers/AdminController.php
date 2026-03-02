@@ -9,6 +9,8 @@ class AdminController
     private ApiKeyRepository $apiKeys;
     private SettingsRepository $settings;
     private TicketRepository $tickets;
+    private AccountListingRepository $accountListings;
+    private WithdrawalRepository $withdrawals;
 
     public function __construct()
     {
@@ -19,6 +21,8 @@ class AdminController
         $this->apiKeys = new ApiKeyRepository();
         $this->settings = new SettingsRepository();
         $this->tickets = new TicketRepository();
+        $this->accountListings = new AccountListingRepository();
+        $this->withdrawals = new WithdrawalRepository();
     }
 
     public function dashboard(): void
@@ -266,11 +270,37 @@ class AdminController
         $logo = $this->settings->get('logo_path');
         $smsMarkup = $this->settings->get('sms_markup_percent') ?? '0';
         $boostMarkup = $this->settings->get('boost_markup_percent') ?? '0';
+        $sellerFee = $this->settings->get('account_seller_fee') ?? '0';
+        $withdrawFee = $this->settings->get('account_withdrawal_fee_percent') ?? '10';
+        $accountCategories = $this->settings->get('account_categories') ?? '';
+        $accountPlatforms = $this->settings->get('account_platforms') ?? '';
+        $activePaymentProvider = $this->settings->get('active_payment_provider') ?? 'fapshi';
+        $swychrBaseUrl = $this->settings->get('swychr_base_url') ?? 'https://app.swychrconnect.com';
+        $swychrToken = $this->settings->get('swychr_token') ?? '';
+        $swychrEmail = $this->settings->get('swychr_email') ?? '';
+        $swychrPassword = $this->settings->get('swychr_password') ?? '';
+        $swychrCountryCode = $this->settings->get('swychr_country_code') ?? 'CM';
+        $swychrCurrency = $this->settings->get('swychr_currency') ?? 'XAF';
+        $swychrPassDigitalCharge = $this->settings->get('swychr_pass_digital_charge') ?? '1';
+        $fapshiApiKey = $this->settings->get('fapshi_api_key') ?? '';
         render('admin/settings', [
             'title' => 'Settings',
             'logo' => $logo,
             'smsMarkup' => $smsMarkup,
             'boostMarkup' => $boostMarkup,
+            'sellerFee' => $sellerFee,
+            'withdrawFee' => $withdrawFee,
+            'accountCategories' => $accountCategories,
+            'accountPlatforms' => $accountPlatforms,
+            'activePaymentProvider' => $activePaymentProvider,
+            'swychrBaseUrl' => $swychrBaseUrl,
+            'swychrToken' => $swychrToken,
+            'swychrEmail' => $swychrEmail,
+            'swychrPassword' => $swychrPassword,
+            'swychrCountryCode' => $swychrCountryCode,
+            'swychrCurrency' => $swychrCurrency,
+            'swychrPassDigitalCharge' => $swychrPassDigitalCharge,
+            'fapshiApiKey' => $fapshiApiKey,
         ]);
     }
 
@@ -336,7 +366,7 @@ class AdminController
             redirect('/admin');
         }
 
-        $this->users->incrementBalance($userId, $amount);
+        $this->users->incrementTopupBalance($userId, $amount);
         $this->transactions->create([
             'user_id' => $userId,
             'type' => 'adjustment',
@@ -372,9 +402,35 @@ class AdminController
         verify_csrf();
         $smsMarkup = (float)($_POST['sms_markup_percent'] ?? 0);
         $boostMarkup = (float)($_POST['boost_markup_percent'] ?? 0);
+        $sellerFee = (float)($_POST['account_seller_fee'] ?? 0);
+        $withdrawFee = (float)($_POST['account_withdrawal_fee_percent'] ?? 10);
+        $accountCategories = trim($_POST['account_categories'] ?? '');
+        $accountPlatforms = trim($_POST['account_platforms'] ?? '');
+        $activePaymentProvider = trim($_POST['active_payment_provider'] ?? 'fapshi');
+        $swychrBaseUrl = trim($_POST['swychr_base_url'] ?? 'https://app.swychrconnect.com');
+        $swychrToken = trim($_POST['swychr_token'] ?? '');
+        $swychrEmail = trim($_POST['swychr_email'] ?? '');
+        $swychrPassword = trim($_POST['swychr_password'] ?? '');
+        $swychrCountryCode = trim($_POST['swychr_country_code'] ?? 'CM');
+        $swychrCurrency = trim($_POST['swychr_currency'] ?? 'XAF');
+        $swychrPassDigitalCharge = trim($_POST['swychr_pass_digital_charge'] ?? '1');
+        $fapshiApiKey = trim($_POST['fapshi_api_key'] ?? '');
 
         $this->settings->set('sms_markup_percent', (string)$smsMarkup);
         $this->settings->set('boost_markup_percent', (string)$boostMarkup);
+        $this->settings->set('account_seller_fee', (string)$sellerFee);
+        $this->settings->set('account_withdrawal_fee_percent', (string)$withdrawFee);
+        $this->settings->set('account_categories', $accountCategories);
+        $this->settings->set('account_platforms', $accountPlatforms);
+        $this->settings->set('active_payment_provider', $activePaymentProvider === 'swychr' ? 'swychr' : 'fapshi');
+        $this->settings->set('swychr_base_url', $swychrBaseUrl);
+        $this->settings->set('swychr_token', $swychrToken);
+        $this->settings->set('swychr_email', $swychrEmail);
+        $this->settings->set('swychr_password', $swychrPassword);
+        $this->settings->set('swychr_country_code', $swychrCountryCode);
+        $this->settings->set('swychr_currency', $swychrCurrency);
+        $this->settings->set('swychr_pass_digital_charge', $swychrPassDigitalCharge === '0' ? '0' : '1');
+        $this->settings->set('fapshi_api_key', $fapshiApiKey);
 
         $updatedLogo = false;
         if (!empty($_FILES['logo']['name'])) {
@@ -398,5 +454,101 @@ class AdminController
             flash('success', 'Settings updated.');
         }
         redirect('/admin/settings');
+    }
+
+    public function accountListings(): void
+    {
+        $logo = $this->settings->get('logo_path');
+        $listings = $this->accountListings->allPending();
+        render('admin/account-listings', [
+            'title' => 'Account Listings',
+            'logo' => $logo,
+            'listings' => $listings,
+        ]);
+    }
+
+    public function approveAccountListing(): void
+    {
+        verify_csrf();
+        $listingId = (int)($_POST['listing_id'] ?? 0);
+        if ($listingId <= 0) {
+            flash('error', 'Invalid listing.');
+            redirect('/admin/account-listings');
+        }
+        $this->accountListings->updateStatus($listingId, 'approved');
+        flash('success', 'Listing approved.');
+        redirect('/admin/account-listings');
+    }
+
+    public function rejectAccountListing(): void
+    {
+        verify_csrf();
+        $listingId = (int)($_POST['listing_id'] ?? 0);
+        if ($listingId <= 0) {
+            flash('error', 'Invalid listing.');
+            redirect('/admin/account-listings');
+        }
+        $this->accountListings->updateStatus($listingId, 'rejected');
+        flash('success', 'Listing rejected.');
+        redirect('/admin/account-listings');
+    }
+
+    public function withdrawals(): void
+    {
+        $logo = $this->settings->get('logo_path');
+        $requests = $this->withdrawals->allPending();
+        render('admin/withdrawals', [
+            'title' => 'Withdrawal Requests',
+            'logo' => $logo,
+            'requests' => $requests,
+        ]);
+    }
+
+    public function approveWithdrawal(): void
+    {
+        verify_csrf();
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        $request = $this->withdrawals->findById($requestId);
+
+        if (!$request || $request['status'] !== 'pending') {
+            flash('error', 'Invalid withdrawal request.');
+            redirect('/admin/withdrawals');
+        }
+
+        $user = $this->users->findById((int)$request['user_id']);
+        $earningsBalance = (float)($user['balance_earnings'] ?? 0);
+        if (!$user || $earningsBalance < (float)$request['amount']) {
+            flash('error', 'User balance insufficient for this withdrawal.');
+            redirect('/admin/withdrawals');
+        }
+
+        $this->users->incrementEarningsBalance($user['id'], -(float)$request['amount']);
+        $this->transactions->create([
+            'user_id' => $user['id'],
+            'type' => 'adjustment',
+            'amount' => -(float)$request['amount'],
+            'ref' => 'withdrawal-' . $requestId,
+            'provider' => 'withdrawal',
+            'status' => 'success',
+            'meta' => json_encode(['fee' => $request['fee'], 'net' => $request['net_amount']]),
+        ]);
+
+        $this->withdrawals->updateStatus($requestId, 'approved');
+        flash('success', 'Withdrawal approved.');
+        redirect('/admin/withdrawals');
+    }
+
+    public function rejectWithdrawal(): void
+    {
+        verify_csrf();
+        $requestId = (int)($_POST['request_id'] ?? 0);
+        if ($requestId <= 0) {
+            flash('error', 'Invalid withdrawal request.');
+            redirect('/admin/withdrawals');
+        }
+        $note = trim($_POST['note'] ?? '');
+        $this->withdrawals->updateStatus($requestId, 'rejected', $note);
+        flash('success', 'Withdrawal rejected.');
+        redirect('/admin/withdrawals');
     }
 }

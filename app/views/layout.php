@@ -41,10 +41,12 @@ $currentPath = current_path();
             background: #F8FAFC;
         }
         .card {
-            background: #ffffff;
-            border: 1px solid #E2E8F0;
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.18);
             border-radius: 1rem;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
         }
         .soft-input {
             border-radius: 0.75rem;
@@ -67,8 +69,10 @@ $currentPath = current_path();
         }
         .chip {
             border-radius: 9999px;
-            border: 1px solid #E2E8F0;
-            background: #ffffff;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
         }
         .nav-pill {
             border-radius: 1rem;
@@ -107,7 +111,7 @@ $currentPath = current_path();
 <body class="text-slate-800">
     <?php if (!$user || $user['role'] === 'admin'): ?>
         <nav class="border-b border-slate-200 sticky top-0 bg-white/90 backdrop-blur z-40">
-            <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="w-full px-4 py-4 flex items-center justify-between">
                 <a href="<?= url('/') ?>" class="font-bold text-primary text-xl flex items-center space-x-2">
                     <?php $logo = setting('logo_path'); ?>
                     <?php if ($logo): ?>
@@ -117,12 +121,15 @@ $currentPath = current_path();
                 </a>
                 <div class="hidden md:flex items-center space-x-4">
                     <?php if (!$user): ?>
+                        <a href="<?= url('/services') ?>" class="text-slate-700 hover:text-primary">Services</a>
+                        <a href="<?= url('/accounts') ?>" class="text-slate-700 hover:text-primary">Marketplace</a>
                         <a href="<?= url('/login') ?>" class="text-slate-700 hover:text-primary">Login</a>
                         <a href="<?= url('/register') ?>" class="bg-primary text-white px-4 py-2 rounded">Create account</a>
                     <?php else: ?>
                         <a href="<?= url('/dashboard') ?>" class="text-slate-700 hover:text-primary">Dashboard</a>
                         <a href="<?= url('/services') ?>" class="text-slate-700 hover:text-primary">Buy Number</a>
                         <a href="<?= url('/boosting') ?>" class="text-slate-700 hover:text-primary">Boosting</a>
+                        <a href="<?= url('/accounts') ?>" class="text-slate-700 hover:text-primary">Marketplace</a>
                         <a href="<?= url('/wallet') ?>" class="text-slate-700 hover:text-primary">Wallet</a>
                         <a href="<?= url('/profile') ?>" class="text-slate-700 hover:text-primary">Profile</a>
                         <a href="<?= url('/help') ?>" class="text-slate-700 hover:text-primary">Help</a>
@@ -148,14 +155,20 @@ $currentPath = current_path();
                 </div>
             </div>
             <div id="mobileMenu" class="md:hidden hidden border-t border-slate-200 bg-white">
-                <div class="max-w-6xl mx-auto px-4 py-3 space-y-2">
+                <div class="w-full px-4 py-3 space-y-2">
                     <?php if (!$user): ?>
+                        <a href="<?= url('/services') ?>" class="block text-slate-700">Services</a>
+                        <a href="<?= url('/accounts') ?>" class="block text-slate-700">Marketplace</a>
                         <a href="<?= url('/login') ?>" class="block text-slate-700">Login</a>
                         <a href="<?= url('/register') ?>" class="block text-primary font-semibold">Create account</a>
                     <?php else: ?>
                         <?php if ($user['role'] === 'admin'): ?>
                             <a href="<?= url('/admin') ?>" class="block text-slate-700">Admin</a>
                         <?php endif; ?>
+                        <a href="<?= url('/accounts') ?>" class="block text-slate-700">Marketplace</a>
+                        <a href="<?= url('/accounts/sell') ?>" class="block text-slate-700">Sell Accounts</a>
+                        <a href="<?= url('/accounts/purchases') ?>" class="block text-slate-700">Purchased Accounts</a>
+                        <a href="<?= url('/accounts/withdrawals') ?>" class="block text-slate-700">Withdrawals</a>
                         <a href="<?= url('/profile') ?>" class="block text-slate-700">Profile</a>
                         <a href="<?= url('/help') ?>" class="block text-slate-700">Help Center</a>
                         <a href="<?= url('/api/docs') ?>" class="block text-slate-700">API Docs</a>
@@ -173,7 +186,7 @@ $currentPath = current_path();
     <?php endif; ?>
 
     <?php if ($flashError): ?>
-        <div class="max-w-6xl mx-auto mt-4 px-4">
+        <div class="w-full mt-4 px-4">
             <div class="bg-red-50 text-danger border border-red-200 px-4 py-3 rounded">
                 <?= htmlspecialchars($flashError) ?>
             </div>
@@ -181,7 +194,7 @@ $currentPath = current_path();
     <?php endif; ?>
 
     <?php if ($flashSuccess): ?>
-        <div class="max-w-6xl mx-auto mt-4 px-4">
+        <div class="w-full mt-4 px-4">
             <div class="bg-green-50 text-green-700 border border-green-200 px-4 py-3 rounded">
                 <?= htmlspecialchars($flashSuccess) ?>
             </div>
@@ -194,13 +207,17 @@ $currentPath = current_path();
                 ['href' => '/dashboard', 'label' => 'Dashboard', 'icon' => 'layout-dashboard'],
                 ['href' => '/services', 'label' => 'SMS Services', 'icon' => 'smartphone'],
                 ['href' => '/boosting', 'label' => 'Boosting', 'icon' => 'rocket'],
+                ['href' => '/accounts', 'label' => 'Marketplace', 'icon' => 'store'],
+                ['href' => '/accounts/sell', 'label' => 'Sell Accounts', 'icon' => 'badge-dollar-sign'],
+                ['href' => '/accounts/purchases', 'label' => 'Purchased', 'icon' => 'shopping-bag'],
+                ['href' => '/accounts/withdrawals', 'label' => 'Withdrawals', 'icon' => 'banknote'],
                 ['href' => '/wallet', 'label' => 'Wallet', 'icon' => 'wallet'],
                 ['href' => '/profile', 'label' => 'Profile', 'icon' => 'user'],
                 ['href' => '/help', 'label' => 'Help Center', 'icon' => 'life-buoy'],
             ];
         ?>
-        <div class="flex h-[75vh] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden max-w-6xl mx-auto">
-            <aside class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col min-h-0 overflow-y-auto">
+        <div class="flex min-h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden w-full backdrop-blur-xl" style="width:100vw;">
+            <aside class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-hidden backdrop-blur-xl">
                 <div class="p-5 border-b border-slate-200 flex items-center space-x-3">
                     <?php $logo = setting('logo_path'); ?>
                     <?php if ($logo): ?>
@@ -211,7 +228,7 @@ $currentPath = current_path();
                         <p class="text-xs text-slate-500">Welcome back</p>
                     </div>
                 </div>
-                <nav class="flex-1 p-4 space-y-1">
+                <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                     <?php foreach ($userNavItems as $item): ?>
                         <?php $isActive = $currentPath === $item['href']; ?>
                         <a href="<?= url($item['href']) ?>" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm font-medium <?= $isActive ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-100' ?>">
@@ -220,7 +237,7 @@ $currentPath = current_path();
                         </a>
                     <?php endforeach; ?>
                 </nav>
-                <form method="post" action="<?= url('/logout') ?>" class="p-4 border-t border-slate-200">
+                <form method="post" action="<?= url('/logout') ?>" class="p-4 border-t border-slate-200 bg-white mb-24">
                     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
                     <button class="w-full bg-danger text-white px-4 py-2 rounded inline-flex items-center justify-center space-x-2">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -228,9 +245,73 @@ $currentPath = current_path();
                     </button>
                 </form>
             </aside>
-            <main class="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
-                <?php if (file_exists($viewFile)) { require $viewFile; } else { echo '<p>View not found.</p>'; } ?>
-            </main>
+            <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <div class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200">
+                    <div class="px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <button id="userMenuToggle" class="md:hidden border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                                <i data-lucide="menu" class="w-4 h-4"></i>
+                            </button>
+                            <div class="flex items-center gap-2">
+                                <?php $logo = setting('logo_path'); ?>
+                                <?php if ($logo): ?>
+                                    <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-8">
+                                <?php else: ?>
+                                    <span class="font-semibold text-slate-800">GetSMS</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <a href="<?= url('/help') ?>" class="p-2 rounded-lg border border-slate-200 bg-white">
+                                <i data-lucide="bell" class="w-4 h-4"></i>
+                            </a>
+                            <a href="<?= url('/profile') ?>" class="w-9 h-9 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                                <?php if (!empty(current_user()['profile_image'])): ?>
+                                    <img src="<?= htmlspecialchars(url(current_user()['profile_image'])) ?>" alt="Profile" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <span class="text-slate-400 text-sm"><?= strtoupper(substr(current_user()['name'] ?? 'U', 0, 1)) ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <main class="flex-1 min-h-0 overflow-y-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
+                    <?php if (file_exists($viewFile)) { require $viewFile; } else { echo '<p>View not found.</p>'; } ?>
+                </main>
+            </div>
+        </div>
+
+        <div id="userMobileMenu" class="md:hidden fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/40" data-close="userMobileMenu"></div>
+            <div class="absolute top-0 left-0 h-full w-72 bg-white border-r border-slate-200 flex flex-col">
+                <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <?php $logo = setting('logo_path'); ?>
+                        <?php if ($logo): ?>
+                            <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-8">
+                        <?php else: ?>
+                            <span class="font-semibold text-slate-800">GetSMS</span>
+                        <?php endif; ?>
+                    </div>
+                    <button id="userMenuClose" class="border border-slate-200 rounded px-2 py-1 text-xs">Close</button>
+                </div>
+                <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                    <?php foreach ($userNavItems as $item): ?>
+                        <?php $isActive = $currentPath === $item['href']; ?>
+                        <a href="<?= url($item['href']) ?>" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm font-medium <?= $isActive ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-100' ?>">
+                            <i data-lucide="<?= htmlspecialchars($item['icon']) ?>" class="w-4 h-4"></i>
+                            <span><?= htmlspecialchars($item['label']) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </nav>
+                <form method="post" action="<?= url('/logout') ?>" class="p-4 border-t border-slate-200 bg-white">
+                    <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+                    <button class="w-full bg-danger text-white px-4 py-2 rounded inline-flex items-center justify-center space-x-2">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
         </div>
     <?php else: ?>
         <main class="max-w-6xl mx-auto px-4 py-6 md:py-8 pb-28 md:pb-8">
@@ -247,7 +328,7 @@ $currentPath = current_path();
                         ['href' => '/services', 'label' => 'SMS', 'icon' => 'smartphone'],
                         ['href' => '/boosting', 'label' => 'Boost', 'icon' => 'rocket'],
                         ['href' => '/wallet', 'label' => 'Wallet', 'icon' => 'wallet'],
-                        ['href' => '/api/docs', 'label' => 'API', 'icon' => 'code'],
+                        ['href' => '/accounts', 'label' => 'Market', 'icon' => 'store'],
                     ];
                 ?>
                 <?php foreach ($navItems as $item): ?>
@@ -274,6 +355,28 @@ $currentPath = current_path();
 
         if (window.lucide) {
             window.lucide.createIcons();
+        }
+
+        const userMenuToggle = document.getElementById('userMenuToggle');
+        const userMenuClose = document.getElementById('userMenuClose');
+        const userMobileMenu = document.getElementById('userMobileMenu');
+        if (userMenuToggle && userMobileMenu) {
+            userMenuToggle.addEventListener('click', () => {
+                userMobileMenu.classList.remove('hidden');
+            });
+        }
+        if (userMenuClose && userMobileMenu) {
+            userMenuClose.addEventListener('click', () => {
+                userMobileMenu.classList.add('hidden');
+            });
+        }
+        if (userMobileMenu) {
+            userMobileMenu.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target && target.dataset && target.dataset.close === 'userMobileMenu') {
+                    userMobileMenu.classList.add('hidden');
+                }
+            });
         }
     </script>
 </body>

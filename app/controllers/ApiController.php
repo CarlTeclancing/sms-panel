@@ -52,7 +52,11 @@ class ApiController
     public function balance(): void
     {
         $user = $this->requireApiAuth();
-        $this->json(['balance' => (float)$user['balance']]);
+        $this->json([
+            'balance' => (float)($user['balance'] ?? 0),
+            'balance_topup' => (float)($user['balance_topup'] ?? $user['balance'] ?? 0),
+            'balance_earnings' => (float)($user['balance_earnings'] ?? 0),
+        ]);
     }
 
     public function services(): void
@@ -90,7 +94,8 @@ class ApiController
 
         $smsMarkup = setting('sms_markup_percent', '0');
         $cost = price_with_markup((float)$service['price'], $smsMarkup);
-        if ((float)$user['balance'] < $cost) {
+        $topupBalance = (float)($user['balance_topup'] ?? $user['balance'] ?? 0);
+        if ($topupBalance < $cost) {
             $this->json(['success' => false, 'message' => 'Insufficient balance'], 402);
         }
 
@@ -125,8 +130,8 @@ class ApiController
             'cost' => $cost,
         ]);
 
-        $newBalance = (float)$user['balance'] - $cost;
-        $this->users->updateBalance($user['id'], $newBalance);
+        $newTopupBalance = $topupBalance - $cost;
+        $this->users->updateTopupBalance($user['id'], $newTopupBalance);
 
         $this->transactions->create([
             'user_id' => $user['id'],

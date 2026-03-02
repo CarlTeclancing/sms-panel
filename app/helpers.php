@@ -123,3 +123,20 @@ function price_with_markup(float $amount, ?string $percent = null): float
     }
     return $amount * (1 + ($percentValue / 100));
 }
+
+function slugify(string $value): string
+{
+    $value = strtolower(trim($value));
+    $value = preg_replace('/[^a-z0-9\s-]/', '', $value) ?? '';
+    $value = preg_replace('/[\s-]+/', '-', $value) ?? '';
+    return trim($value, '-');
+}
+
+function send_email(string $to, string $subject, string $message): bool
+{
+    $config = app_config();
+    $from = getenv('APP_EMAIL_FROM') ?: 'no-reply@' . parse_url($config['app']['base_url'], PHP_URL_HOST);
+    $headers = "From: {$from}\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    return @mail($to, $subject, $message, $headers);
+}

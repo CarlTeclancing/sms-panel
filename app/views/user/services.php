@@ -18,31 +18,43 @@ $flagMap = [
     <a href="<?= url('/wallet') ?>" class="text-primary">Refill wallet</a>
 </div>
 
+<div class="mt-3 bg-white border border-slate-200 rounded p-3">
+    <label class="block text-xs font-medium text-slate-500">Search services</label>
+    <input id="serviceSearchTop" type="text" placeholder="Search by service name..." class="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-sm">
+</div>
+
 <div class="mt-4 bg-white border border-slate-200 rounded p-4">
     <h3 class="text-lg font-semibold">SMS Verification</h3>
     <p class="text-sm text-slate-500">Buy or rent numbers for verification.</p>
 </div>
 
-<form method="get" action="<?= url('/services') ?>" class="mt-4 bg-white border border-slate-200 rounded p-4">
-    <label class="block text-sm font-medium">Select country</label>
-    <select name="country_id" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" onchange="this.form.submit()">
-        <option value="0" <?= $selectedCountryId === 0 ? 'selected' : '' ?>>🌐 Any country</option>
-        <?php foreach ($countries as $country): ?>
-            <?php
-                $title = $country['title'] ?? '';
-                $flag = $flagMap[$title]['flag'] ?? '🌐';
-                $code = $flagMap[$title]['code'] ?? '';
-            ?>
-            <option value="<?= (int)$country['id'] ?>" <?= $selectedCountryId === (int)$country['id'] ? 'selected' : '' ?>>
-                <?= $flag ?> <?= htmlspecialchars($title) ?> <?= $code ? '(' . $code . ')' : '' ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-    <?php if (!empty($priceRange)): ?>
-        <p class="text-xs text-slate-500 mt-2">Live price range: $<?= number_format((float)$priceRange['min'], 4) ?> - $<?= number_format((float)$priceRange['max'], 4) ?></p>
-    <?php endif; ?>
-</form>
+<div class="mt-4 bg-white border border-slate-200 rounded p-4">
+    <div class="flex items-center justify-between md:hidden">
+        <h4 class="text-sm font-semibold">Filters</h4>
+        <button type="button" id="toggleServiceFilters" class="text-sm text-primary">Show</button>
+    </div>
+    <form method="get" action="<?= url('/services') ?>" id="serviceFilters" class="mt-3 md:mt-0 hidden md:block">
+        <label class="block text-sm font-medium">Select country</label>
+        <select name="country_id" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" onchange="this.form.submit()">
+            <option value="0" <?= $selectedCountryId === 0 ? 'selected' : '' ?>>🌐 Any country</option>
+            <?php foreach ($countries as $country): ?>
+                <?php
+                    $title = $country['title'] ?? '';
+                    $flag = $flagMap[$title]['flag'] ?? '🌐';
+                    $code = $flagMap[$title]['code'] ?? '';
+                ?>
+                <option value="<?= (int)$country['id'] ?>" <?= $selectedCountryId === (int)$country['id'] ? 'selected' : '' ?>>
+                    <?= $flag ?> <?= htmlspecialchars($title) ?> <?= $code ? '(' . $code . ')' : '' ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <?php if (!empty($priceRange)): ?>
+            <p class="text-xs text-slate-500 mt-2">Live price range: $<?= number_format((float)$priceRange['min'], 4) ?> - $<?= number_format((float)$priceRange['max'], 4) ?></p>
+        <?php endif; ?>
+    </form>
+</div>
 
+<?php if ($user): ?>
 <form method="post" action="<?= url('/purchase') ?>" class="mt-6 bg-slate-50 border border-slate-200 rounded p-6">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <input type="hidden" name="country_id" value="<?= (int)$selectedCountryId ?>">
@@ -102,6 +114,12 @@ $flagMap = [
     </div>
     <button class="mt-4 bg-primary text-white px-6 py-2 rounded">Get number</button>
 </form>
+<?php else: ?>
+<div class="mt-6 bg-slate-50 border border-slate-200 rounded p-6 text-center">
+    <p class="mb-4 text-slate-600">You must <a href="<?= url('/login') ?>" class="text-primary underline">login</a> to buy or rent a number.</p>
+    <a href="<?= url('/login') ?>" class="bg-primary text-white px-6 py-2 rounded">Login to buy</a>
+</div>
+<?php endif; ?>
 
 <div class="mt-8">
     <h3 class="text-lg font-semibold">Available services</h3>
@@ -179,12 +197,18 @@ $flagMap = [
     const serviceButtons = document.querySelectorAll('.service-btn');
     const serviceInput = document.getElementById('serviceInput');
     const serviceSearch = document.getElementById('serviceSearch');
+    const serviceSearchTop = document.getElementById('serviceSearchTop');
     const loadMoreBtn = document.getElementById('loadMoreServices');
 
     let visibleCount = 10;
 
+    const getServiceQuery = () => {
+        const query = (serviceSearch?.value || serviceSearchTop?.value || '').toLowerCase();
+        return query;
+    };
+
     const updateServiceVisibility = () => {
-        const query = (serviceSearch?.value || '').toLowerCase();
+        const query = getServiceQuery();
         let shown = 0;
         const groups = document.querySelectorAll('.service-group');
 
@@ -210,7 +234,7 @@ $flagMap = [
     };
 
     const filteredCount = () => {
-        const query = (serviceSearch?.value || '').toLowerCase();
+        const query = getServiceQuery();
         let total = 0;
         serviceButtons.forEach(btn => {
             const name = (btn.dataset.serviceName || '').toLowerCase();
@@ -268,11 +292,22 @@ $flagMap = [
         }
     }
 
+    const handleServiceSearch = (event) => {
+        if (event && event.target === serviceSearch && serviceSearchTop) {
+            serviceSearchTop.value = serviceSearch.value;
+        }
+        if (event && event.target === serviceSearchTop && serviceSearch) {
+            serviceSearch.value = serviceSearchTop.value;
+        }
+        visibleCount = 10;
+        updateServiceVisibility();
+    };
+
     if (serviceSearch) {
-        serviceSearch.addEventListener('input', () => {
-            visibleCount = 10;
-            updateServiceVisibility();
-        });
+        serviceSearch.addEventListener('input', handleServiceSearch);
+    }
+    if (serviceSearchTop) {
+        serviceSearchTop.addEventListener('input', handleServiceSearch);
     }
 
     if (loadMoreBtn) {
@@ -334,5 +369,15 @@ $flagMap = [
     if (boostServiceSelect) {
         boostServiceSelect.addEventListener('change', updateBoostMeta);
         updateBoostMeta();
+    }
+
+    const toggleServiceFilters = document.getElementById('toggleServiceFilters');
+    const serviceFilters = document.getElementById('serviceFilters');
+    if (toggleServiceFilters && serviceFilters) {
+        toggleServiceFilters.addEventListener('click', () => {
+            const isHidden = serviceFilters.classList.contains('hidden');
+            serviceFilters.classList.toggle('hidden', !isHidden ? true : false);
+            toggleServiceFilters.textContent = isHidden ? 'Hide' : 'Show';
+        });
     }
 </script>

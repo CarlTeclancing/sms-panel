@@ -12,7 +12,7 @@
     <div class="space-y-4">
         <div class="border border-slate-200 rounded p-4">
             <h4 class="font-semibold">GET /api/v1/balance</h4>
-            <p class="text-sm text-slate-600">Returns your wallet balance.</p>
+            <p class="text-sm text-slate-600">Returns total balance plus topup and earnings balances.</p>
         </div>
         <div class="border border-slate-200 rounded p-4">
             <h4 class="font-semibold">GET /api/v1/services</h4>

@@ -6,6 +6,7 @@ require __DIR__ . '/../app/helpers.php';
 require __DIR__ . '/../app/services/SmsManClient.php';
 require __DIR__ . '/../app/services/FapshiClient.php';
 require __DIR__ . '/../app/services/PeakerrClient.php';
+require __DIR__ . '/../app/services/SwychrClient.php';
 require __DIR__ . '/../app/repositories/UserRepository.php';
 require __DIR__ . '/../app/repositories/ServiceRepository.php';
 require __DIR__ . '/../app/repositories/SocialServiceRepository.php';
@@ -15,6 +16,10 @@ require __DIR__ . '/../app/repositories/TransactionRepository.php';
 require __DIR__ . '/../app/repositories/TicketRepository.php';
 require __DIR__ . '/../app/repositories/ApiKeyRepository.php';
 require __DIR__ . '/../app/repositories/SettingsRepository.php';
+require __DIR__ . '/../app/repositories/AccountListingRepository.php';
+require __DIR__ . '/../app/repositories/AccountPurchaseRepository.php';
+require __DIR__ . '/../app/repositories/SellerFeeRepository.php';
+require __DIR__ . '/../app/repositories/WithdrawalRepository.php';
 require __DIR__ . '/../app/controllers/AuthController.php';
 require __DIR__ . '/../app/controllers/UserController.php';
 require __DIR__ . '/../app/controllers/AdminController.php';
@@ -93,6 +98,48 @@ if ($path === '/services') {
     exit;
 }
 
+if ($path === '/accounts' && $method === 'GET') {
+    require_auth();
+    $userController->accountsMarketplace();
+    exit;
+}
+
+if ($path === '/accounts/sell' && $method === 'GET') {
+    require_auth();
+    $userController->sellAccount();
+    exit;
+}
+
+if ($path === '/accounts/sell' && $method === 'POST') {
+    require_auth();
+    $userController->createAccountListing();
+    exit;
+}
+
+if ($path === '/accounts/buy' && $method === 'POST') {
+    require_auth();
+    $userController->purchaseAccount();
+    exit;
+}
+
+if ($path === '/accounts/purchases' && $method === 'GET') {
+    require_auth();
+    $userController->accountPurchases();
+    exit;
+}
+
+if ($path === '/accounts/withdrawals' && $method === 'GET') {
+    require_auth();
+    $userController->withdrawals();
+    exit;
+}
+
+if ($path === '/accounts/withdrawals' && $method === 'POST') {
+    require_auth();
+    $userController->requestWithdrawal();
+    exit;
+}
+
 if ($path === '/boosting') {
     require_auth();
     $userController->boosting();
@@ -126,6 +173,12 @@ if ($path === '/profile' && $method === 'GET') {
 if ($path === '/profile/update' && $method === 'POST') {
     require_auth();
     $userController->updateProfile();
+    exit;
+}
+
+if ($path === '/profile/store' && $method === 'POST') {
+    require_auth();
+    $userController->updateStoreProfile();
     exit;
 }
 
@@ -212,6 +265,48 @@ if ($path === '/admin/transactions') {
     require_auth();
     require_admin();
     $adminController->transactions();
+    exit;
+}
+
+if ($path === '/admin/account-listings') {
+    require_auth();
+    require_admin();
+    $adminController->accountListings();
+    exit;
+}
+
+if ($path === '/admin/account-listings/approve' && $method === 'POST') {
+    require_auth();
+    require_admin();
+    $adminController->approveAccountListing();
+    exit;
+}
+
+if ($path === '/admin/account-listings/reject' && $method === 'POST') {
+    require_auth();
+    require_admin();
+    $adminController->rejectAccountListing();
+    exit;
+}
+
+if ($path === '/admin/withdrawals') {
+    require_auth();
+    require_admin();
+    $adminController->withdrawals();
+    exit;
+}
+
+if ($path === '/admin/withdrawals/approve' && $method === 'POST') {
+    require_auth();
+    require_admin();
+    $adminController->approveWithdrawal();
+    exit;
+}
+
+if ($path === '/admin/withdrawals/reject' && $method === 'POST') {
+    require_auth();
+    require_admin();
+    $adminController->rejectWithdrawal();
     exit;
 }
 
@@ -304,6 +399,16 @@ if ($path === '/api/v1/sms-status') {
 
 if ($path === '/webhooks/fapshi' && $method === 'POST') {
     $webhookController->fapshi();
+    exit;
+}
+
+if ($path === '/webhooks/swychr' && $method === 'POST') {
+    $webhookController->swychr();
+    exit;
+}
+
+if (preg_match('#^/store/([a-zA-Z0-9\-]+)$#', $path, $matches)) {
+    $userController->publicStore($matches[1]);
     exit;
 }
 

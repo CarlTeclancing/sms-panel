@@ -34,7 +34,7 @@
                 </tbody>
             </table>
         </div>
-        <div>
+            <div class="mt-4 bg-white/60 border border-white/30 rounded backdrop-blur-xl">
             <h2 class="text-2xl font-semibold">Boosting Orders</h2>
             <div class="mt-4 bg-slate-50 border border-slate-200 rounded">
                 <table class="w-full text-sm">
@@ -69,8 +69,10 @@
     </div>
     <div>
         <div class="bg-primary text-white rounded p-4">
-            <p class="text-sm">Wallet balance</p>
+            <p class="text-sm">Total balance</p>
             <p class="text-2xl font-semibold">$<?= number_format((float)current_user()['balance'], 2) ?></p>
+            <p class="text-xs mt-2">Top up: $<?= number_format((float)(current_user()['balance_topup'] ?? current_user()['balance'] ?? 0), 2) ?></p>
+            <p class="text-xs">Earnings: $<?= number_format((float)(current_user()['balance_earnings'] ?? 0), 2) ?></p>
             <a href="<?= url('/wallet') ?>" class="inline-block mt-3 bg-white text-primary px-4 py-2 rounded">Refill</a>
         </div>
         <div class="mt-6 border border-slate-200 rounded p-4">

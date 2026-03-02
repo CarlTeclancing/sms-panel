@@ -38,14 +38,14 @@ class WebhookController
 
         if ($isSuccess) {
             $creditAmount = $amount > 0 ? $amount : (float)$tx['amount'];
-            $this->users->incrementBalance((int)$tx['user_id'], $creditAmount);
+            $this->users->incrementTopupBalance((int)$tx['user_id'], $creditAmount);
 
             $user = $this->users->findById((int)$tx['user_id']);
             if ($user && empty($user['first_deposit_at'])) {
                 $this->users->markFirstDeposit((int)$tx['user_id']);
                 if (!empty($user['referred_by']) && (int)$user['referral_rewarded'] !== 1) {
                     $referrerId = (int)$user['referred_by'];
-                    $this->users->incrementBalance($referrerId, 1.00);
+                    $this->users->incrementTopupBalance($referrerId, 1.00);
                     $this->transactions->create([
                         'user_id' => $referrerId,
                         'type' => 'adjustment',
@@ -57,6 +57,46 @@ class WebhookController
                     ]);
                     $this->users->markReferralRewarded((int)$tx['user_id']);
                 }
+            }
+        }
+
+        $this->json(['success' => true]);
+    }
+
+    public function swychr(): void
+    {
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $attributes = $payload['data']['data']['attributes'] ?? [];
+        $transactionId = $attributes['transaction_id'] ?? $payload['data']['data']['transaction_id'] ?? null;
+        $statusValue = $attributes['status'] ?? $attributes['payment_status'] ?? $attributes['state'] ?? null;
+        $amount = (float)($attributes['amount'] ?? $attributes['paid_amount'] ?? 0);
+
+        if (!$transactionId) {
+            $this->json(['success' => false, 'message' => 'Missing transaction_id'], 400);
+        }
+
+        $tx = $this->transactions->findByRef($transactionId);
+        if (!$tx) {
+            $this->json(['success' => false, 'message' => 'Transaction not found'], 404);
+        }
+
+        if ($tx['status'] === 'success') {
+            $this->json(['success' => true, 'message' => 'Already processed']);
+        }
+
+        $normalized = is_string($statusValue) ? strtolower($statusValue) : $statusValue;
+        $isSuccess = in_array($normalized, ['success', 'successful', 'paid', 'completed', '1'], true) || $normalized === 1;
+        $newStatus = $isSuccess ? 'success' : 'failed';
+
+        $this->transactions->updateStatus((int)$tx['id'], $newStatus, json_encode($payload));
+
+        if ($isSuccess) {
+            $creditAmount = $amount > 0 ? $amount : (float)$tx['amount'];
+            $this->users->incrementTopupBalance((int)$tx['user_id'], $creditAmount);
+
+            $user = $this->users->findById((int)$tx['user_id']);
+            if ($user && empty($user['first_deposit_at'])) {
+                $this->users->markFirstDeposit((int)$tx['user_id']);
             }
         }
 

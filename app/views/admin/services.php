@@ -3,6 +3,8 @@ $sidebarItems = [
     ['label' => 'Dashboard', 'href' => '/admin', 'icon' => 'layout-dashboard'],
     ['label' => 'Services', 'href' => '/admin/services', 'icon' => 'smartphone'],
     ['label' => 'Boosting Services', 'href' => '/admin/boosting-services', 'icon' => 'rocket'],
+    ['label' => 'Account Listings', 'href' => '/admin/account-listings', 'icon' => 'shield-check'],
+    ['label' => 'Withdrawals', 'href' => '/admin/withdrawals', 'icon' => 'banknote'],
     ['label' => 'Users', 'href' => '/admin/users', 'icon' => 'users'],
     ['label' => 'Transactions', 'href' => '/admin/transactions', 'icon' => 'receipt'],
     ['label' => 'API Keys', 'href' => '/admin/api-keys', 'icon' => 'key'],
@@ -13,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex h-[75vh] bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col min-h-0 overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
+<div class="flex min-h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden backdrop-blur-xl">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40 backdrop-blur-xl">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -25,7 +27,7 @@ $currentPath = current_path();
             </div>
             <button id="closeSidebar" class="md:hidden border border-slate-200 rounded px-2 py-1 text-xs">Close</button>
         </div>
-        <nav class="flex-1 p-4 space-y-1">
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
             <?php foreach ($sidebarItems as $item): ?>
                 <?php $isActive = $currentPath === $item['href']; ?>
                 <a href="<?= url($item['href']) ?>" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm font-medium <?= $isActive ? 'bg-primary text-white' : 'text-slate-600 hover:bg-slate-100' ?>">
@@ -34,10 +36,17 @@ $currentPath = current_path();
                 </a>
             <?php endforeach; ?>
         </nav>
+        <form method="post" action="<?= url('/logout') ?>" class="p-4 border-t border-slate-200 bg-white">
+            <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+            <button class="w-full bg-danger text-white px-4 py-2 rounded inline-flex items-center justify-center space-x-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Logout</span>
+            </button>
+        </form>
     </aside>
 
     <div class="flex-1 min-h-0 overflow-y-auto">
-        <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sticky top-0 z-10">
+        <div class="bg-white/60 border-b border-white/30 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sticky top-0 z-10 backdrop-blur-xl">
             <div class="flex items-center space-x-3">
                 <button id="toggleSidebar" class="lg:hidden border border-slate-200 rounded px-3 py-1 text-sm">Menu</button>
                 <div>
@@ -119,7 +128,7 @@ $currentPath = current_path();
                     ?>
                     <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <p class="text-sm text-slate-500">Showing <?= $start ?>-<?= $end ?> of <?= (int)$totalServices ?></p>
-                        <div class="flex items-center space-x-2">
+                                <div class="flex min-h-screen w-full bg-slate-50 overflow-hidden">
                             <a href="<?= url('/admin/services?page=' . max(1, $currentPage - 1)) ?>" class="px-3 py-1 rounded border border-slate-300 text-sm <?= $currentPage <= 1 ? 'pointer-events-none opacity-50' : '' ?>">Previous</a>
                             <span class="text-sm text-slate-600">Page <?= (int)$currentPage ?> of <?= (int)($totalPages ?? 1) ?></span>
                             <a href="<?= url('/admin/services?page=' . min(($totalPages ?? 1), $currentPage + 1)) ?>" class="px-3 py-1 rounded border border-slate-300 text-sm <?= $currentPage >= ($totalPages ?? 1) ? 'pointer-events-none opacity-50' : '' ?>">Next</a>
@@ -136,6 +145,8 @@ $currentPath = current_path();
         ['href' => '/admin', 'label' => 'Home', 'icon' => 'layout-dashboard'],
         ['href' => '/admin/services', 'label' => 'SMS', 'icon' => 'smartphone'],
         ['href' => '/admin/boosting-services', 'label' => 'Boost', 'icon' => 'rocket'],
+        ['href' => '/admin/account-listings', 'label' => 'Accounts', 'icon' => 'shield-check'],
+        ['href' => '/admin/withdrawals', 'label' => 'Withdrawals', 'icon' => 'banknote'],
         ['href' => '/admin/users', 'label' => 'Users', 'icon' => 'users'],
         ['href' => '/admin/settings', 'label' => 'Settings', 'icon' => 'settings'],
     ];

@@ -11,6 +11,10 @@ class UserController
     private ApiKeyRepository $apiKeys;
     private SettingsRepository $settings;
     private TicketRepository $tickets;
+    private AccountListingRepository $accountListings;
+    private AccountPurchaseRepository $accountPurchases;
+    private SellerFeeRepository $sellerFees;
+    private WithdrawalRepository $withdrawals;
 
     public function __construct()
     {
@@ -23,6 +27,10 @@ class UserController
         $this->apiKeys = new ApiKeyRepository();
         $this->settings = new SettingsRepository();
         $this->tickets = new TicketRepository();
+        $this->accountListings = new AccountListingRepository();
+        $this->accountPurchases = new AccountPurchaseRepository();
+        $this->sellerFees = new SellerFeeRepository();
+        $this->withdrawals = new WithdrawalRepository();
     }
 
     public function dashboard(): void
@@ -189,7 +197,8 @@ class UserController
         $boostMarkup = setting('boost_markup_percent', '0');
         $rate = price_with_markup((float)$service['rate'], $boostMarkup);
         $cost = ($rate * $quantity) / 1000;
-        if ((float)$user['balance'] < $cost) {
+        $topupBalance = (float)($user['balance_topup'] ?? $user['balance'] ?? 0);
+        if ($topupBalance < $cost) {
             flash('error', 'Insufficient balance. Please refill your wallet.');
             redirect('/wallet');
         }
@@ -219,8 +228,8 @@ class UserController
             'currency' => 'USD',
         ]);
 
-        $newBalance = (float)$user['balance'] - $cost;
-        $this->users->updateBalance($user['id'], $newBalance);
+        $newTopupBalance = $topupBalance - $cost;
+        $this->users->updateTopupBalance($user['id'], $newTopupBalance);
         $_SESSION['user'] = $this->users->findById($user['id']);
 
         $this->transactions->create([
@@ -263,7 +272,8 @@ class UserController
 
         $smsMarkup = setting('sms_markup_percent', '0');
         $cost = price_with_markup((float)$service['price'], $smsMarkup);
-        if ((float)$user['balance'] < $cost) {
+        $topupBalance = (float)($user['balance_topup'] ?? $user['balance'] ?? 0);
+        if ($topupBalance < $cost) {
             flash('error', 'Insufficient balance. Please refill your wallet.');
             redirect('/wallet');
         }
@@ -301,8 +311,8 @@ class UserController
             'cost' => $cost,
         ]);
 
-        $newBalance = (float)$user['balance'] - $cost;
-        $this->users->updateBalance($user['id'], $newBalance);
+        $newTopupBalance = $topupBalance - $cost;
+        $this->users->updateTopupBalance($user['id'], $newTopupBalance);
         $_SESSION['user'] = $this->users->findById($user['id']);
 
         $this->transactions->create([
@@ -353,8 +363,11 @@ class UserController
         render('user/wallet', [
             'title' => 'Wallet',
             'balance' => (float)($user['balance'] ?? 0),
+            'balanceTopup' => (float)($user['balance_topup'] ?? $user['balance'] ?? 0),
+            'balanceEarnings' => (float)($user['balance_earnings'] ?? 0),
             'transactions' => $transactions,
             'activity' => $activity,
+            'activePaymentProvider' => $this->settings->get('active_payment_provider') ?? 'fapshi',
         ]);
     }
 
@@ -378,11 +391,15 @@ class UserController
         $referralsCount = $this->users->countReferrals($user['id']);
         $referralEarnings = $this->transactions->referralEarnings($user['id']);
 
+        $storeSlug = $user['store_slug'] ?? '';
+        $storeUrl = $storeSlug ? url('/store/' . $storeSlug) : '';
+
         render('user/profile', [
             'title' => 'Profile',
             'referralLink' => $referralLink,
             'referralsCount' => $referralsCount,
             'referralEarnings' => $referralEarnings,
+            'storeUrl' => $storeUrl,
         ]);
     }
 
@@ -421,6 +438,39 @@ class UserController
         $this->users->updateProfileInfo($user['id'], $name, $email, $profileImage);
         $_SESSION['user'] = $this->users->findById($user['id']);
         flash('success', 'Profile updated.');
+        redirect('/profile');
+    }
+
+    public function updateStoreProfile(): void
+    {
+        verify_csrf();
+        $user = current_user();
+        $storeName = trim($_POST['store_name'] ?? '');
+        $storeSlug = trim($_POST['store_slug'] ?? '');
+        $storeTagline = trim($_POST['store_tagline'] ?? '');
+        $storeDescription = trim($_POST['store_description'] ?? '');
+
+        if ($storeName === '') {
+            flash('error', 'Store name is required.');
+            redirect('/profile');
+        }
+
+        $slugBase = $storeSlug !== '' ? $storeSlug : $storeName;
+        $slug = slugify($slugBase);
+        if ($slug === '') {
+            flash('error', 'Provide a valid store URL slug.');
+            redirect('/profile');
+        }
+
+        $existing = $this->users->findByStoreSlug($slug);
+        if ($existing && (int)$existing['id'] !== (int)$user['id']) {
+            flash('error', 'Store URL is already taken.');
+            redirect('/profile');
+        }
+
+        $this->users->updateStoreProfile($user['id'], $storeName, $slug, $storeTagline, $storeDescription);
+        $_SESSION['user'] = $this->users->findById($user['id']);
+        flash('success', 'Store branding updated.');
         redirect('/profile');
     }
 
@@ -489,13 +539,37 @@ class UserController
         $phone = trim($_POST['phone'] ?? '');
         $provider = trim($_POST['provider'] ?? '');
 
-        if ($amount <= 0 || !$phone || !$provider) {
+        $activeProvider = $this->settings->get('active_payment_provider') ?? 'fapshi';
+
+        if ($amount <= 0 || ($activeProvider === 'fapshi' && (!$phone || !$provider)) || ($activeProvider === 'swychr' && !$phone)) {
             flash('error', 'Please provide valid refill details.');
             redirect('/wallet');
         }
 
+        if ($activeProvider === 'swychr') {
+            // Use the new plain PHP Swychr integration for all top-ups
+            $name = $user['name'] ?? ($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '');
+            $email = $user['email'] ?? '';
+            $mobile = $phone;
+            $amount = (float)($_POST['amount'] ?? 0);
+            $description = 'Wallet deposit for user #' . $user['id'];
+
+            $_POST['name'] = $name;
+            $_POST['email'] = $email;
+            $_POST['mobile'] = $mobile;
+            $_POST['amount'] = $amount;
+            $_POST['description'] = $description;
+
+            require_once __DIR__ . '/../services/SwychrPlainIntegration.php';
+            exit; // The integration script will handle the redirect or output
+        }
+
         $config = app_config();
-        $client = new FapshiClient($config['fapshi']);
+        $fapshiKey = $this->settings->get('fapshi_api_key') ?? $config['fapshi']['api_key'];
+        $client = new FapshiClient([
+            'base_url' => $config['fapshi']['base_url'],
+            'api_key' => $fapshiKey,
+        ]);
 
         $payload = [
             'amount' => $amount,
@@ -524,6 +598,270 @@ class UserController
 
         flash('success', 'Payment initiated. Complete the payment on your phone.');
         redirect('/wallet');
+    }
+
+    private function parseListSetting(?string $value): array
+    {
+        if (!$value) {
+            return [];
+        }
+        $parts = preg_split('/[\r\n,]+/', $value);
+        $clean = [];
+        foreach ($parts as $part) {
+            $item = trim($part);
+            if ($item !== '') {
+                $clean[] = $item;
+            }
+        }
+        return array_values(array_unique($clean));
+    }
+
+    public function accountsMarketplace(): void
+    {
+        $categories = $this->parseListSetting($this->settings->get('account_categories'));
+        $platforms = $this->parseListSetting($this->settings->get('account_platforms'));
+
+        $filters = [
+            'category' => trim($_GET['category'] ?? ''),
+            'platform' => trim($_GET['platform'] ?? ''),
+            'year' => trim($_GET['year'] ?? ''),
+            'search' => trim($_GET['search'] ?? ''),
+        ];
+
+        $listings = $this->accountListings->allApproved($filters);
+        render('user/accounts', [
+            'title' => 'Account Marketplace',
+            'listings' => $listings,
+            'categories' => $categories,
+            'platforms' => $platforms,
+            'filters' => $filters,
+        ]);
+    }
+
+    public function sellAccount(): void
+    {
+        $user = current_user();
+        $categories = $this->parseListSetting($this->settings->get('account_categories'));
+        $platforms = $this->parseListSetting($this->settings->get('account_platforms'));
+        $sellerFee = (float)($this->settings->get('account_seller_fee') ?? 0);
+        $hasPaidFee = $this->sellerFees->hasPaid($user['id']) || $sellerFee <= 0;
+        $listings = $this->accountListings->allBySeller($user['id']);
+
+        $storeSlug = $user['store_slug'] ?? '';
+        $storeUrl = $storeSlug ? url('/store/' . $storeSlug) : '';
+
+        render('user/account-sell', [
+            'title' => 'Sell Accounts',
+            'categories' => $categories,
+            'platforms' => $platforms,
+            'sellerFee' => $sellerFee,
+            'hasPaidFee' => $hasPaidFee,
+            'listings' => $listings,
+            'storeUrl' => $storeUrl,
+        ]);
+    }
+
+    public function publicStore(string $slug): void
+    {
+        $storeOwner = $this->users->findByStoreSlug($slug);
+        if (!$storeOwner) {
+            http_response_code(404);
+            echo 'Store not found';
+            exit;
+        }
+
+        $listings = $this->accountListings->allApprovedBySellerId((int)$storeOwner['id']);
+        render('store', [
+            'title' => ($storeOwner['store_name'] ?? $storeOwner['name']) . ' Store',
+            'storeOwner' => $storeOwner,
+            'listings' => $listings,
+        ]);
+    }
+
+    public function createAccountListing(): void
+    {
+        verify_csrf();
+        $user = current_user();
+        $title = trim($_POST['title'] ?? '');
+        $category = trim($_POST['category'] ?? '');
+        $platform = trim($_POST['platform'] ?? '');
+        $year = (int)($_POST['year'] ?? 0);
+        $price = (float)($_POST['price'] ?? 0);
+        $description = trim($_POST['description'] ?? '');
+        $details = trim($_POST['account_details'] ?? '');
+
+        if (!$title || !$category || !$platform || $price <= 0 || !$details) {
+            flash('error', 'Please fill all required fields.');
+            redirect('/accounts/sell');
+        }
+
+        $sellerFee = (float)($this->settings->get('account_seller_fee') ?? 0);
+        $hasPaidFee = $this->sellerFees->hasPaid($user['id']) || $sellerFee <= 0;
+        if (!$hasPaidFee) {
+            $topupBalance = (float)($user['balance_topup'] ?? $user['balance'] ?? 0);
+            if ($topupBalance < $sellerFee) {
+                flash('error', 'Insufficient balance to pay the one-time seller fee.');
+                redirect('/wallet');
+            }
+
+            $newTopupBalance = $topupBalance - $sellerFee;
+            $this->users->updateTopupBalance($user['id'], $newTopupBalance);
+            $_SESSION['user'] = $this->users->findById($user['id']);
+
+            $ref = 'seller-fee-' . time();
+            $this->sellerFees->create($user['id'], $sellerFee, $ref);
+            $this->transactions->create([
+                'user_id' => $user['id'],
+                'type' => 'adjustment',
+                'amount' => -$sellerFee,
+                'ref' => $ref,
+                'provider' => 'seller_fee',
+                'status' => 'success',
+                'meta' => json_encode(['fee' => $sellerFee]),
+            ]);
+        }
+
+        $this->accountListings->create([
+            'seller_id' => $user['id'],
+            'title' => $title,
+            'category' => $category,
+            'platform' => $platform,
+            'year' => $year > 0 ? $year : null,
+            'price' => $price,
+            'description' => $description,
+            'account_details' => $details,
+            'status' => 'pending',
+        ]);
+
+        flash('success', 'Listing submitted for verification.');
+        redirect('/accounts/sell');
+    }
+
+    public function purchaseAccount(): void
+    {
+        verify_csrf();
+        $user = current_user();
+        $listingId = (int)($_POST['listing_id'] ?? 0);
+        $listing = $this->accountListings->findById($listingId);
+
+        if (!$listing || $listing['status'] !== 'approved' || !empty($listing['sold_at'])) {
+            flash('error', 'Listing not available.');
+            redirect('/accounts');
+        }
+
+        if ((int)$listing['seller_id'] === (int)$user['id']) {
+            flash('error', 'You cannot buy your own listing.');
+            redirect('/accounts');
+        }
+
+        $price = (float)$listing['price'];
+        $topupBalance = (float)($user['balance_topup'] ?? $user['balance'] ?? 0);
+        if ($topupBalance < $price) {
+            flash('error', 'Insufficient balance to complete purchase.');
+            redirect('/wallet');
+        }
+
+        $newTopupBalance = $topupBalance - $price;
+        $this->users->updateTopupBalance($user['id'], $newTopupBalance);
+        $_SESSION['user'] = $this->users->findById($user['id']);
+
+        $seller = $this->users->findById((int)$listing['seller_id']);
+        if ($seller) {
+            $this->users->incrementEarningsBalance($seller['id'], $price);
+            $this->transactions->create([
+                'user_id' => $seller['id'],
+                'type' => 'adjustment',
+                'amount' => $price,
+                'ref' => 'account-sale-' . $listingId,
+                'provider' => 'account_market',
+                'status' => 'success',
+                'meta' => json_encode(['listing_id' => $listingId, 'buyer_id' => $user['id']]),
+            ]);
+        }
+
+        $this->transactions->create([
+            'user_id' => $user['id'],
+            'type' => 'purchase',
+            'amount' => -$price,
+            'ref' => 'account-buy-' . $listingId,
+            'provider' => 'account_market',
+            'status' => 'success',
+            'meta' => json_encode(['listing_id' => $listingId]),
+        ]);
+
+        $this->accountListings->markSold($listingId, $user['id']);
+        $this->accountPurchases->create([
+            'listing_id' => $listingId,
+            'buyer_id' => $user['id'],
+            'seller_id' => (int)$listing['seller_id'],
+            'price' => $price,
+            'platform_fee' => 0,
+            'net_amount' => $price,
+            'details_snapshot' => $listing['account_details'],
+        ]);
+
+        $subject = 'Your account purchase details';
+        $message = "Thank you for your purchase.\n\nListing: {$listing['title']}\nCategory: {$listing['category']}\nPlatform: {$listing['platform']}\nYear: " . ($listing['year'] ?: '-') . "\nPrice: $" . number_format($price, 2) . "\n\nAccount Details:\n{$listing['account_details']}\n\nPlease keep this information secure.";
+        send_email($user['email'], $subject, $message);
+
+        flash('success', 'Purchase completed. Details sent to your email and available in your account.');
+        redirect('/accounts/purchases');
+    }
+
+    public function accountPurchases(): void
+    {
+        $user = current_user();
+        $purchases = $this->accountPurchases->allByBuyer($user['id']);
+        render('user/account-purchases', [
+            'title' => 'Purchased Accounts',
+            'purchases' => $purchases,
+        ]);
+    }
+
+    public function withdrawals(): void
+    {
+        $user = current_user();
+        $withdrawals = $this->withdrawals->allByUser($user['id']);
+        $feePercent = (float)($this->settings->get('account_withdrawal_fee_percent') ?? 10);
+        render('user/account-withdrawals', [
+            'title' => 'Withdrawals',
+            'withdrawals' => $withdrawals,
+            'feePercent' => $feePercent,
+        ]);
+    }
+
+    public function requestWithdrawal(): void
+    {
+        verify_csrf();
+        $user = current_user();
+        $amount = (float)($_POST['amount'] ?? 0);
+        $note = trim($_POST['note'] ?? '');
+
+        if ($amount <= 0) {
+            flash('error', 'Enter a valid amount.');
+            redirect('/accounts/withdrawals');
+        }
+        $earningsBalance = (float)($user['balance_earnings'] ?? 0);
+        if ($earningsBalance < $amount) {
+            flash('error', 'Insufficient balance for withdrawal.');
+            redirect('/accounts/withdrawals');
+        }
+
+        $feePercent = (float)($this->settings->get('account_withdrawal_fee_percent') ?? 10);
+        $fee = $amount * ($feePercent / 100);
+        $net = $amount - $fee;
+
+        $this->withdrawals->create([
+            'user_id' => $user['id'],
+            'amount' => $amount,
+            'fee' => $fee,
+            'net_amount' => $net,
+            'status' => 'pending',
+            'note' => $note,
+        ]);
+
+        flash('success', 'Withdrawal request submitted. Admin approval required.');
+        redirect('/accounts/withdrawals');
     }
 
     private function autoSyncBoostingServices(): void

@@ -8,12 +8,17 @@
     </div>
 
     <div class="grid md:grid-cols-3 gap-6">
-        <div class="md:col-span-1 bg-primary text-white rounded p-5">
-            <p class="text-sm">Available balance</p>
+        <div class="md:col-span-1 bg-primary/80 text-white rounded p-5 backdrop-blur-xl">
+            <p class="text-sm">Total balance</p>
             <p class="text-3xl font-semibold mt-2">$<?= number_format((float)($balance ?? 0), 2) ?></p>
+            <div class="mt-3 text-sm space-y-1">
+                <p>Top up: $<?= number_format((float)($balanceTopup ?? 0), 2) ?></p>
+                <p>Earnings: $<?= number_format((float)($balanceEarnings ?? 0), 2) ?></p>
+                <p class="text-xs opacity-90">Purchases use top up balance. Withdrawals use earnings.</p>
+            </div>
             <button id="openTopupCard" class="mt-4 bg-white text-primary px-4 py-2 rounded">Top up</button>
         </div>
-        <div class="md:col-span-2 bg-white border border-slate-200 rounded p-5">
+        <div class="md:col-span-2 bg-white/60 border border-white/30 rounded p-5 backdrop-blur-xl">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold">Recent Transactions</h3>
             </div>
@@ -46,7 +51,7 @@
         </div>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded p-5">
+    <div class="bg-white/60 border border-white/30 rounded p-5 backdrop-blur-xl">
         <h3 class="text-lg font-semibold">Activity</h3>
         <div class="mt-4">
             <?php if (empty($activity)): ?>
@@ -79,7 +84,13 @@
             <h3 class="text-lg font-semibold">Top up wallet</h3>
             <button id="closeTopup" class="text-slate-500">Close</button>
         </div>
-        <p class="text-sm text-slate-500 mt-1">Fund your account using MoMo or Orange Money via Fapshi.</p>
+        <p class="text-sm text-slate-500 mt-1">
+            <?php if (($activePaymentProvider ?? 'fapshi') === 'swychr'): ?>
+                Pay securely with Swychr.
+            <?php else: ?>
+                Fund your account using MoMo or Orange Money via Fapshi.
+            <?php endif; ?>
+        </p>
         <form method="post" action="<?= url('/wallet/refill') ?>" class="mt-6 space-y-4">
             <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <div>
@@ -90,13 +101,15 @@
                 <label class="block text-sm font-medium">Mobile Number</label>
                 <input name="phone" type="text" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
             </div>
-            <div>
-                <label class="block text-sm font-medium">Provider</label>
-                <select name="provider" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
-                    <option value="mtn">MTN MoMo</option>
-                    <option value="orange">Orange Money</option>
-                </select>
-            </div>
+            <?php if (($activePaymentProvider ?? 'fapshi') === 'fapshi'): ?>
+                <div>
+                    <label class="block text-sm font-medium">Provider</label>
+                    <select name="provider" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
+                        <option value="mtn">MTN MoMo</option>
+                        <option value="orange">Orange Money</option>
+                    </select>
+                </div>
+            <?php endif; ?>
             <div class="flex items-center justify-end gap-3">
                 <button type="button" id="cancelTopup" class="border border-slate-300 px-4 py-2 rounded">Cancel</button>
                 <button class="bg-primary text-white px-6 py-2 rounded">Initiate payment</button>

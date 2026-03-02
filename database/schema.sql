@@ -5,6 +5,12 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user','admin') DEFAULT 'user',
     balance DECIMAL(12,2) DEFAULT 0,
+    balance_topup DECIMAL(12,2) DEFAULT 0,
+    balance_earnings DECIMAL(12,2) DEFAULT 0,
+    store_slug VARCHAR(120) NULL UNIQUE,
+    store_name VARCHAR(160) NULL,
+    store_tagline VARCHAR(220) NULL,
+    store_description TEXT NULL,
     profile_image VARCHAR(255) NULL,
     referral_code VARCHAR(24) NULL UNIQUE,
     referred_by INT NULL,
@@ -108,6 +114,61 @@ CREATE TABLE IF NOT EXISTS tickets (
     message TEXT NOT NULL,
     status VARCHAR(40) NOT NULL DEFAULT 'open',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS account_listings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    seller_id INT NOT NULL,
+    title VARCHAR(180) NOT NULL,
+    category VARCHAR(120) NOT NULL,
+    platform VARCHAR(120) NOT NULL,
+    year INT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    description TEXT NULL,
+    account_details TEXT NOT NULL,
+    status ENUM('pending','approved','rejected','sold') DEFAULT 'pending',
+    buyer_id INT NULL,
+    approved_at DATETIME NULL,
+    sold_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS account_purchases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    listing_id INT NOT NULL,
+    buyer_id INT NOT NULL,
+    seller_id INT NOT NULL,
+    price DECIMAL(12,2) NOT NULL,
+    platform_fee DECIMAL(12,2) NOT NULL,
+    net_amount DECIMAL(12,2) NOT NULL,
+    details_snapshot TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (listing_id) REFERENCES account_listings(id),
+    FOREIGN KEY (buyer_id) REFERENCES users(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS seller_fees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    ref VARCHAR(120) NOT NULL,
+    paid_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS withdrawal_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    fee DECIMAL(12,2) NOT NULL,
+    net_amount DECIMAL(12,2) NOT NULL,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    note TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at DATETIME NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
