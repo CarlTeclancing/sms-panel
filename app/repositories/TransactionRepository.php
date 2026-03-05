@@ -97,4 +97,19 @@ class TransactionRepository
         $row = $stmt->fetch();
         return (float)($row['total'] ?? 0);
     }
+
+    public function dailyByType(string $type, int $days = 7): array
+    {
+        $stmt = db()->prepare('SELECT DATE(created_at) AS day, SUM(amount) AS total FROM transactions WHERE status = "success" AND type = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(created_at) ORDER BY day ASC');
+        $stmt->execute([$type, $days]);
+        return $stmt->fetchAll();
+    }
+
+    public function totalByType(string $type): float
+    {
+        $stmt = db()->prepare('SELECT SUM(amount) AS total FROM transactions WHERE status = "success" AND type = ?');
+        $stmt->execute([$type]);
+        $row = $stmt->fetch();
+        return (float)($row['total'] ?? 0);
+    }
 }

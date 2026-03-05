@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen w-full bg-slate-50 overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40">
+<div class="flex h-screen w-full bg-slate-50 overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -45,7 +45,7 @@ $currentPath = current_path();
         </form>
     </aside>
 
-            <div class="flex-col min-h-screen w-full bg-slate-50 overflow-hidden">
+            <div class="flex-1 min-h-0 overflow-y-auto bg-slate-50">
         <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sticky top-0 z-10">
             <div class="flex items-center space-x-3">
                 <button id="toggleSidebar" class="lg:hidden border border-slate-200 rounded px-3 py-1 text-sm">Menu</button>
@@ -79,6 +79,8 @@ $currentPath = current_path();
                             <tr class="text-left border-b border-slate-200">
                                 <th class="p-3">User</th>
                                 <th class="p-3">Role</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Country</th>
                                 <th class="p-3">Status</th>
                                 <th class="p-3">Balance</th>
                                 <th class="p-3">Actions</th>
@@ -92,8 +94,10 @@ $currentPath = current_path();
                                         <div class="text-xs text-slate-500"><?= htmlspecialchars($user['email']) ?></div>
                                     </td>
                                     <td class="p-3"><?= htmlspecialchars($user['role']) ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($user['phone_number'] ?? '-') ?></td>
+                                    <td class="p-3"><?= htmlspecialchars($user['country'] ?? '-') ?></td>
                                     <td class="p-3"><?= (int)$user['active'] === 1 ? 'Active' : 'Disabled' ?></td>
-                                    <td class="p-3">$<?= number_format((float)$user['balance'], 2) ?></td>
+                                    <td class="p-3">XAF <?= number_format((float)$user['balance'], 2) ?></td>
                                     <td class="p-3 space-y-2">
                                         <button
                                             class="px-3 py-1 rounded border border-slate-300"
@@ -101,6 +105,8 @@ $currentPath = current_path();
                                             data-user-id="<?= htmlspecialchars($user['id']) ?>"
                                             data-user-name="<?= htmlspecialchars($user['name']) ?>"
                                             data-user-email="<?= htmlspecialchars($user['email']) ?>"
+                                            data-user-phone="<?= htmlspecialchars($user['phone_number'] ?? '') ?>"
+                                            data-user-country="<?= htmlspecialchars($user['country'] ?? '') ?>"
                                             data-user-role="<?= htmlspecialchars($user['role']) ?>"
                                         >
                                             Edit
@@ -187,6 +193,27 @@ $currentPath = current_path();
                     <option value="admin">Admin</option>
                 </select>
             </div>
+            <div>
+                <label class="block text-sm font-medium">Phone number</label>
+                <input name="phone_number" id="editUserPhone" type="tel" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Country</label>
+                <?php
+                    $countries = [
+                        'Cameroon', 'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Cote d’Ivoire', 'Senegal', 'Uganda',
+                        'Tanzania', 'Rwanda', 'Zambia', 'Zimbabwe', 'Egypt', 'Morocco', 'Algeria', 'Tunisia',
+                        'United States', 'Canada', 'United Kingdom', 'France', 'Germany', 'Spain', 'Italy',
+                        'India', 'Pakistan', 'Bangladesh', 'United Arab Emirates', 'Saudi Arabia'
+                    ];
+                ?>
+                <select name="country" id="editUserCountry" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
+                    <option value="">Select country</option>
+                    <?php foreach ($countries as $country): ?>
+                        <option value="<?= htmlspecialchars($country) ?>"><?= htmlspecialchars($country) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div class="flex justify-end space-x-2">
                 <button type="button" id="cancelEditModal" class="border border-slate-300 px-4 py-2 rounded">Cancel</button>
                 <button class="bg-primary text-white px-4 py-2 rounded">Save</button>
@@ -261,6 +288,8 @@ $currentPath = current_path();
     const editUserName = document.getElementById('editUserName');
     const editUserEmail = document.getElementById('editUserEmail');
     const editUserRole = document.getElementById('editUserRole');
+    const editUserPhone = document.getElementById('editUserPhone');
+    const editUserCountry = document.getElementById('editUserCountry');
 
     document.querySelectorAll('[data-edit-user]').forEach(button => {
         button.addEventListener('click', () => {
@@ -268,6 +297,8 @@ $currentPath = current_path();
             editUserName.value = button.dataset.userName;
             editUserEmail.value = button.dataset.userEmail;
             editUserRole.value = button.dataset.userRole;
+            editUserPhone.value = button.dataset.userPhone || '';
+            editUserCountry.value = button.dataset.userCountry || '';
             editModal.classList.remove('hidden');
             editModal.classList.add('flex');
         });

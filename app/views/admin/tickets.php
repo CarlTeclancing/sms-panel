@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40">
+<div class="flex h-screen bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -74,7 +74,7 @@ $currentPath = current_path();
                             <tr class="text-left border-b border-slate-200">
                                 <th class="p-3">User</th>
                                 <th class="p-3">Subject</th>
-                                <th class="p-3">Status</th>
+                         ,          <th class="p-3">Status</th>
                                 <th class="p-3">Created</th>
                             </tr>
                         </thead>

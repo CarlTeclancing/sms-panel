@@ -10,10 +10,10 @@
     <div class="grid md:grid-cols-3 gap-6">
         <div class="md:col-span-1 bg-primary/80 text-white rounded p-5 backdrop-blur-xl">
             <p class="text-sm">Total balance</p>
-            <p class="text-3xl font-semibold mt-2">$<?= number_format((float)($balance ?? 0), 2) ?></p>
+            <p class="text-3xl font-semibold mt-2">XAF <?= number_format((float)($balance ?? 0), 2) ?></p>
             <div class="mt-3 text-sm space-y-1">
-                <p>Top up: $<?= number_format((float)($balanceTopup ?? 0), 2) ?></p>
-                <p>Earnings: $<?= number_format((float)($balanceEarnings ?? 0), 2) ?></p>
+                <p>Top up: XAF <?= number_format((float)($balanceTopup ?? 0), 2) ?></p>
+                <p>Earnings: XAF <?= number_format((float)($balanceEarnings ?? 0), 2) ?></p>
                 <p class="text-xs opacity-90">Purchases use top up balance. Withdrawals use earnings.</p>
             </div>
             <button id="openTopupCard" class="mt-4 bg-white text-primary px-4 py-2 rounded">Top up</button>
@@ -39,7 +39,7 @@
                             <?php foreach (array_slice($transactions, 0, 10) as $tx): ?>
                                 <tr class="border-b border-slate-100">
                                     <td class="p-3"><?= htmlspecialchars($tx['type']) ?></td>
-                                    <td class="p-3">$<?= number_format((float)$tx['amount'], 2) ?></td>
+                                    <td class="p-3">XAF <?= number_format((float)$tx['amount'], 2) ?></td>
                                     <td class="p-3"><?= htmlspecialchars($tx['status']) ?></td>
                                     <td class="p-3 text-slate-500 text-xs"><?= htmlspecialchars($tx['created_at']) ?></td>
                                 </tr>
@@ -66,7 +66,7 @@
                                     <p class="text-xs text-slate-500"><?= htmlspecialchars($item['detail']) ?></p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-semibold">$<?= number_format((float)$item['amount'], 2) ?></p>
+                                    <p class="font-semibold">XAF <?= number_format((float)$item['amount'], 2) ?></p>
                                     <p class="text-xs text-slate-500"><?= htmlspecialchars($item['status']) ?> · <?= htmlspecialchars($item['created_at'] ?? '') ?></p>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@
         <form method="post" action="<?= url('/wallet/refill') ?>" class="mt-6 space-y-4">
             <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <div>
-                <label class="block text-sm font-medium">Amount (USD)</label>
+                <label class="block text-sm font-medium">Amount (XAF)</label>
                 <input name="amount" type="number" step="0.01" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
             </div>
             <div>

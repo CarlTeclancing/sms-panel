@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen w-full bg-slate-50 overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40" style="margin-left:0;padding-left:0;left:0;">
+<div class="flex h-screen w-full bg-slate-50 overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40" style="margin-left:0;padding-left:0;left:0;">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -90,6 +90,13 @@ $currentPath = current_path();
                                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Current logo" class="h-10 mt-2">
                             <?php endif; ?>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium">Favicon</label>
+                            <input name="favicon" type="file" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" accept="image/x-icon,image/png,image/svg+xml">
+                            <?php if (!empty($favicon)): ?>
+                                <img src="<?= htmlspecialchars(url($favicon)) ?>" alt="Current favicon" class="h-10 w-10 mt-2 rounded">
+                            <?php endif; ?>
+                        </div>
                     </section>
 
                     <section id="pricing" class="settings-panel hidden space-y-4">
@@ -101,6 +108,12 @@ $currentPath = current_path();
                             <div>
                                 <label class="block text-sm font-medium">Boosting services markup (%)</label>
                                 <input name="boost_markup_percent" type="number" step="0.01" min="0" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars((string)($boostMarkup ?? '0')) ?>">
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium">USD to XAF rate</label>
+                                <input name="usd_to_xaf_rate" type="number" step="0.0001" min="0" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars((string)($usdToXafRate ?? '1')) ?>">
                             </div>
                         </div>
                     </section>

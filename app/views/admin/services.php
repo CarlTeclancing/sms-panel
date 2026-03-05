@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden backdrop-blur-xl">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40 backdrop-blur-xl">
+<div class="flex h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden backdrop-blur-xl">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40 backdrop-blur-xl">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -89,7 +89,7 @@ $currentPath = current_path();
                             <tr class="text-left border-b border-slate-200">
                                 <th class="p-3">Service</th>
                                 <th class="p-3">Code</th>
-                                <th class="p-3">Price (USD)</th>
+                                <th class="p-3">Price (XAF)</th>
                                 <th class="p-3">Update</th>
                             </tr>
                         </thead>
@@ -99,7 +99,7 @@ $currentPath = current_path();
                                     <tr class="border-b border-slate-100">
                                         <td class="p-3"><?= htmlspecialchars($service['name']) ?></td>
                                         <td class="p-3"><?= htmlspecialchars($service['code']) ?></td>
-                                        <td class="p-3">$<?= number_format((float)$service['price'], 4) ?></td>
+                                        <td class="p-3">XAF <?= format_xaf((float)$service['price'], 4) ?></td>
                                         <td class="p-3">
                                             <form method="post" action="<?= url('/admin/price') ?>" class="flex items-center space-x-2">
                                                 <input type="hidden" name="csrf" value="<?= csrf_token() ?>">

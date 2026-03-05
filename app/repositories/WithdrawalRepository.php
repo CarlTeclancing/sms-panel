@@ -42,4 +42,18 @@ class WithdrawalRepository
         $stmt = db()->prepare('UPDATE withdrawal_requests SET status = ?, note = ?, processed_at = NOW() WHERE id = ?');
         $stmt->execute([$status, $note, $id]);
     }
+
+    public function pendingTotalNet(): float
+    {
+        $stmt = db()->query("SELECT SUM(net_amount) AS total FROM withdrawal_requests WHERE status = 'pending'");
+        $row = $stmt->fetch();
+        return (float)($row['total'] ?? 0);
+    }
+
+    public function dailyTotals(int $days = 7): array
+    {
+        $stmt = db()->prepare('SELECT DATE(created_at) AS day, SUM(net_amount) AS total FROM withdrawal_requests WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(created_at) ORDER BY day ASC');
+        $stmt->execute([$days]);
+        return $stmt->fetchAll();
+    }
 }

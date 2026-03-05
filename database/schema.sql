@@ -2,6 +2,8 @@ CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
+    phone_number VARCHAR(40) NULL,
+    country VARCHAR(120) NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('user','admin') DEFAULT 'user',
     balance DECIMAL(12,2) DEFAULT 0,
@@ -93,7 +95,7 @@ CREATE TABLE IF NOT EXISTS social_orders (
     status VARCHAR(40) NOT NULL DEFAULT 'pending',
     charge DECIMAL(12,4) NULL,
     remains INT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
+    currency VARCHAR(10) DEFAULT 'XAF',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (service_id) REFERENCES social_services(id)

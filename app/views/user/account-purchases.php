@@ -21,7 +21,7 @@
                     <?php foreach ($purchases as $purchase): ?>
                         <tr class="border-b border-slate-100">
                             <td class="p-3">#<?= (int)$purchase['listing_id'] ?></td>
-                            <td class="p-3">$<?= number_format((float)$purchase['price'], 2) ?></td>
+                            <td class="p-3">XAF <?= number_format((float)$purchase['price'], 2) ?></td>
                             <td class="p-3">
                                 <details class="cursor-pointer">
                                     <summary class="text-primary">View details</summary>

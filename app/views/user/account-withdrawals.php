@@ -9,7 +9,7 @@
     <form method="post" action="<?= url('/accounts/withdrawals') ?>" class="mt-4 grid md:grid-cols-2 gap-4">
         <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
         <div>
-            <label class="block text-sm font-medium">Amount (USD)</label>
+            <label class="block text-sm font-medium">Amount (XAF)</label>
             <input name="amount" type="number" step="0.01" min="0" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
         </div>
         <div>
@@ -41,9 +41,9 @@
                 <?php else: ?>
                     <?php foreach ($withdrawals as $withdrawal): ?>
                         <tr class="border-b border-slate-100">
-                            <td class="p-3">$<?= number_format((float)$withdrawal['amount'], 2) ?></td>
-                            <td class="p-3">$<?= number_format((float)$withdrawal['fee'], 2) ?></td>
-                            <td class="p-3">$<?= number_format((float)$withdrawal['net_amount'], 2) ?></td>
+                            <td class="p-3">XAF <?= number_format((float)$withdrawal['amount'], 2) ?></td>
+                            <td class="p-3">XAF <?= number_format((float)$withdrawal['fee'], 2) ?></td>
+                            <td class="p-3">XAF <?= number_format((float)$withdrawal['net_amount'], 2) ?></td>
                             <td class="p-3 capitalize"><?= htmlspecialchars($withdrawal['status']) ?></td>
                             <td class="p-3 text-xs text-slate-500"><?= htmlspecialchars($withdrawal['created_at']) ?></td>
                         </tr>

@@ -6,7 +6,7 @@
 <div class="mt-4 bg-white border border-slate-200 rounded p-4">
     <h3 class="text-lg font-semibold">Seller onboarding</h3>
     <?php if ($sellerFee > 0 && !$hasPaidFee): ?>
-        <p class="text-sm text-slate-600 mt-2">A one-time seller fee of <strong>$<?= number_format((float)$sellerFee, 2) ?></strong> is required before listing. The fee will be charged from your wallet when you submit your first listing.</p>
+        <p class="text-sm text-slate-600 mt-2">A one-time seller fee of <strong>XAF <?= number_format((float)$sellerFee, 2) ?></strong> is required before listing. The fee will be charged from your wallet when you submit your first listing.</p>
     <?php else: ?>
         <p class="text-sm text-slate-600 mt-2">You are verified to sell. Your listings will be reviewed by admin.</p>
     <?php endif; ?>
@@ -61,7 +61,7 @@
             <input name="year" type="number" min="2000" class="mt-1 w-full border border-slate-300 rounded px-3 py-2">
         </div>
         <div>
-            <label class="block text-sm font-medium">Price (USD)</label>
+            <label class="block text-sm font-medium">Price (XAF)</label>
             <input name="price" type="number" step="0.01" min="0" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
         </div>
     </div>
@@ -100,7 +100,7 @@
                             <td class="p-3 font-medium"><?= htmlspecialchars($listing['title']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($listing['category']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($listing['platform']) ?></td>
-                            <td class="p-3">$<?= number_format((float)$listing['price'], 2) ?></td>
+                            <td class="p-3">XAF <?= number_format((float)$listing['price'], 2) ?></td>
                             <td class="p-3 capitalize"><?= htmlspecialchars($listing['status']) ?></td>
                             <td class="p-3 text-xs text-slate-500"><?= htmlspecialchars($listing['created_at']) ?></td>
                         </tr>

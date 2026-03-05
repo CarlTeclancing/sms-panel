@@ -20,3 +20,4 @@ Full-stack PHP app for buying or renting mobile numbers for verification with SM
 - Generate an API token from the dashboard before calling API endpoints.
 - Fapshi webhook endpoint: /webhooks/fapshi (POST JSON). Configure this in your Fapshi dashboard.
 - SMS-Man and Fapshi must be configured with valid tokens for production use.
+- Schedule tools/scheduled_sync.php to run every 15-60 minutes to sync Peakerr services and warm SMS-Man cache.

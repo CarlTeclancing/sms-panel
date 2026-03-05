@@ -8,6 +8,15 @@ class SocialServiceRepository
         return $stmt->fetchAll();
     }
 
+    public function paginateActive(int $limit, int $offset): array
+    {
+        $stmt = db()->prepare('SELECT * FROM social_services WHERE active = 1 ORDER BY category, name LIMIT ? OFFSET ?');
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function topActive(int $limit): array
     {
         $stmt = db()->prepare('SELECT * FROM social_services WHERE active = 1 ORDER BY category, name LIMIT ?');
@@ -69,6 +78,13 @@ class SocialServiceRepository
     public function countAll(): int
     {
         $stmt = db()->query('SELECT COUNT(*) AS total FROM social_services');
+        $row = $stmt->fetch();
+        return (int)($row['total'] ?? 0);
+    }
+
+    public function countActive(): int
+    {
+        $stmt = db()->query('SELECT COUNT(*) AS total FROM social_services WHERE active = 1');
         $row = $stmt->fetch();
         return (int)($row['total'] ?? 0);
     }

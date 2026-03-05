@@ -48,9 +48,7 @@ $flagMap = [
                 </option>
             <?php endforeach; ?>
         </select>
-        <?php if (!empty($priceRange)): ?>
-            <p class="text-xs text-slate-500 mt-2">Live price range: $<?= number_format((float)$priceRange['min'], 4) ?> - $<?= number_format((float)$priceRange['max'], 4) ?></p>
-        <?php endif; ?>
+        <p class="text-xs text-slate-500 mt-2" id="priceRangeText">Live price range: loading...</p>
     </form>
 </div>
 
@@ -68,26 +66,7 @@ $flagMap = [
         </div>
         <div class="mt-3 border border-slate-200 rounded-lg p-3 h-64 overflow-y-auto bg-white" id="serviceScroll">
             <div class="space-y-4" id="serviceGroups">
-                <?php foreach ($services as $service): ?>
-                    <?php
-                        $count = $availability[(int)$service['smsman_application_id']] ?? null;
-                        $group = strtoupper(substr($service['name'], 0, 1));
-                    ?>
-                    <div class="service-group" data-group="<?= htmlspecialchars($group) ?>">
-                        <p class="text-xs font-semibold text-slate-500 mb-2"><?= htmlspecialchars($group) ?></p>
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                type="button"
-                                class="service-btn border border-slate-300 rounded-full px-4 py-2 text-sm <?= ($count !== null && $count <= 0) ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary' ?>"
-                                data-service-id="<?= htmlspecialchars($service['id']) ?>"
-                                data-service-name="<?= htmlspecialchars($service['name']) ?>"
-                                data-disabled="<?= ($count !== null && $count <= 0) ? '1' : '0' ?>"
-                            >
-                                    <?= htmlspecialchars($service['name']) ?> · $<?= number_format((float)($service['display_price'] ?? $service['price']), 4) ?>
-                            </button>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                <div class="text-xs text-slate-500" id="servicesLoading">Loading services...</div>
             </div>
             <div class="mt-4 flex justify-center">
                 <button type="button" id="loadMoreServices" class="border border-slate-300 px-4 py-2 rounded text-sm">Load more</button>
@@ -133,7 +112,7 @@ $flagMap = [
     <h3 class="text-lg font-semibold">Social Media Boosting</h3>
     <p class="text-sm text-slate-500">Place social media engagement orders via Peakerr.</p>
 </div>
-
+<?php if ($user): ?>
 <form method="post" action="<?= url('/boost/order') ?>" class="mt-4 bg-slate-50 border border-slate-200 rounded p-6">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <div class="grid md:grid-cols-2 gap-4">
@@ -188,23 +167,53 @@ $flagMap = [
     </div>
     <button class="mt-4 bg-primary text-white px-6 py-2 rounded" <?= empty($boostingServices) ? 'disabled' : '' ?>>Place boosting order</button>
 </form>
+<?php else: ?>
+<div class="mt-4 bg-slate-50 border border-slate-200 rounded p-6 text-center">
+    <p class="mb-4 text-slate-600">You must <a href="<?= url('/login') ?>" class="text-primary underline">login</a> to place boosting orders.</p>
+    <a href="<?= url('/login') ?>" class="bg-primary text-white px-6 py-2 rounded">Login to boost</a>
+</div>
+<?php endif; ?>
 
 <script>
-    const servicesData = <?php echo json_encode($services ?? []); ?>;
+    const servicesDataUrl = "<?= url('/services/data') ?>";
+    const selectedCountryId = <?= (int)$selectedCountryId ?>;
     const purchaseType = document.getElementById('purchaseType');
     const rentalOptions = document.getElementById('rentalOptions');
     const typeButtons = document.querySelectorAll('.type-btn');
-    const serviceButtons = document.querySelectorAll('.service-btn');
     const serviceInput = document.getElementById('serviceInput');
     const serviceSearch = document.getElementById('serviceSearch');
     const serviceSearchTop = document.getElementById('serviceSearchTop');
     const loadMoreBtn = document.getElementById('loadMoreServices');
+    const serviceGroups = document.getElementById('serviceGroups');
+    let servicesLoading = document.getElementById('servicesLoading');
+    const priceRangeText = document.getElementById('priceRangeText');
 
+    let serviceButtons = [];
+    let servicesData = [];
+    let totalServices = 0;
+    let serviceOffset = 0;
     let visibleCount = 10;
+    let isLoadingServices = false;
+    let currentSearch = '';
+
+    const refreshServiceButtons = () => {
+        serviceButtons = Array.from(document.querySelectorAll('.service-btn'));
+    };
 
     const getServiceQuery = () => {
-        const query = (serviceSearch?.value || serviceSearchTop?.value || '').toLowerCase();
-        return query;
+        return (serviceSearch?.value || serviceSearchTop?.value || '').toLowerCase();
+    };
+
+    const filteredCount = () => {
+        const query = getServiceQuery();
+        let total = 0;
+        serviceButtons.forEach(btn => {
+            const name = (btn.dataset.serviceName || '').toLowerCase();
+            if (!query || name.includes(query)) {
+                total += 1;
+            }
+        });
+        return total;
     };
 
     const updateServiceVisibility = () => {
@@ -229,20 +238,8 @@ $flagMap = [
         });
 
         if (loadMoreBtn) {
-            loadMoreBtn.classList.toggle('hidden', shown >= filteredCount());
+            loadMoreBtn.classList.toggle('hidden', shown >= filteredCount() && serviceOffset >= totalServices);
         }
-    };
-
-    const filteredCount = () => {
-        const query = getServiceQuery();
-        let total = 0;
-        serviceButtons.forEach(btn => {
-            const name = (btn.dataset.serviceName || '').toLowerCase();
-            if (!query || name.includes(query)) {
-                total += 1;
-            }
-        });
-        return total;
     };
 
     const setActiveType = (type) => {
@@ -254,11 +251,7 @@ $flagMap = [
             btn.classList.toggle('border-primary', active);
         });
         if (rentalOptions) {
-            if (type === 'rent') {
-                rentalOptions.classList.remove('hidden');
-            } else {
-                rentalOptions.classList.add('hidden');
-            }
+            rentalOptions.classList.toggle('hidden', type !== 'rent');
         }
     };
 
@@ -276,21 +269,127 @@ $flagMap = [
         });
     };
 
-    serviceButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.dataset.disabled === '1') {
+    const attachServiceButtonHandlers = () => {
+        serviceButtons.forEach(btn => {
+            if (btn.dataset.bound === '1') {
                 return;
             }
-            setActiveService(btn.dataset.serviceId);
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', () => {
+                if (btn.dataset.disabled === '1') {
+                    return;
+                }
+                setActiveService(btn.dataset.serviceId);
+            });
         });
-    });
+    };
 
-    if (serviceButtons.length) {
-        const firstEnabled = Array.from(serviceButtons).find(btn => btn.dataset.disabled === '0');
-        if (firstEnabled) {
-            setActiveService(firstEnabled.dataset.serviceId);
+    const ensureGroup = (groupKey) => {
+        let group = serviceGroups.querySelector(`.service-group[data-group="${groupKey}"]`);
+        if (!group) {
+            group = document.createElement('div');
+            group.className = 'service-group';
+            group.dataset.group = groupKey;
+            group.innerHTML = `
+                <p class="text-xs font-semibold text-slate-500 mb-2">${groupKey}</p>
+                <div class="flex flex-wrap gap-2" data-group-buttons></div>
+            `;
+            serviceGroups.appendChild(group);
         }
-    }
+        return group;
+    };
+
+    const renderServiceBatch = (batch) => {
+        if (servicesLoading) {
+            servicesLoading.remove();
+            servicesLoading = null;
+        }
+        batch.forEach(service => {
+            const name = service.name || '';
+            const groupKey = name ? name.trim().charAt(0).toUpperCase() : '#';
+            const group = ensureGroup(groupKey);
+            const buttonsContainer = group.querySelector('[data-group-buttons]');
+            const disabled = service.availability !== null && Number(service.availability) <= 0;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `service-btn border border-slate-300 rounded-full px-4 py-2 text-sm ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary'}`;
+            button.dataset.serviceId = String(service.id ?? '');
+            button.dataset.serviceName = String(service.name ?? '');
+            button.dataset.disabled = disabled ? '1' : '0';
+            button.textContent = `${service.name} · XAF ${Number(service.display_price ?? service.price ?? 0).toFixed(4)}`;
+            buttonsContainer.appendChild(button);
+        });
+        refreshServiceButtons();
+        attachServiceButtonHandlers();
+
+        if (!serviceInput.value) {
+            const firstEnabled = serviceButtons.find(btn => btn.dataset.disabled === '0');
+            if (firstEnabled) {
+                setActiveService(firstEnabled.dataset.serviceId);
+            }
+        }
+    };
+
+    const fetchServices = async (reset = false) => {
+        if (isLoadingServices) {
+            return;
+        }
+        isLoadingServices = true;
+
+        if (reset) {
+            serviceOffset = 0;
+            visibleCount = 10;
+            servicesData = [];
+            totalServices = 0;
+            serviceGroups.innerHTML = '<div class="text-xs text-slate-500" id="servicesLoading">Loading services...</div>';
+            servicesLoading = document.getElementById('servicesLoading');
+            if (availableServicesEl) {
+                availableServicesEl.innerHTML = '';
+            }
+            availableCursor = 0;
+        }
+
+        const params = new URLSearchParams({
+            country_id: String(selectedCountryId),
+            offset: String(serviceOffset),
+            limit: String(200),
+        });
+        if (currentSearch) {
+            params.set('search', currentSearch);
+        }
+
+        try {
+            const response = await fetch(`${servicesDataUrl}?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error('Failed to load services');
+            }
+            const data = await response.json();
+            const batch = Array.isArray(data.services) ? data.services : [];
+            totalServices = Number(data.total || 0);
+
+            if (reset && priceRangeText) {
+                if (data.price_range && data.price_range.min !== undefined && data.price_range.max !== undefined) {
+                    priceRangeText.textContent = `Live price range: XAF ${Number(data.price_range.min).toFixed(4)} - XAF ${Number(data.price_range.max).toFixed(4)}`;
+                } else {
+                    priceRangeText.textContent = 'Live price range: unavailable';
+                }
+            }
+
+            servicesData = servicesData.concat(batch);
+            renderServiceBatch(batch);
+            serviceOffset += batch.length;
+            updateServiceVisibility();
+        } catch (error) {
+            if (priceRangeText && reset) {
+                priceRangeText.textContent = 'Live price range: unavailable';
+            }
+            if (servicesLoading) {
+                servicesLoading.textContent = 'Failed to load services.';
+            }
+        } finally {
+            isLoadingServices = false;
+        }
+    };
 
     const handleServiceSearch = (event) => {
         if (event && event.target === serviceSearch && serviceSearchTop) {
@@ -299,8 +398,8 @@ $flagMap = [
         if (event && event.target === serviceSearchTop && serviceSearch) {
             serviceSearch.value = serviceSearchTop.value;
         }
-        visibleCount = 10;
-        updateServiceVisibility();
+        currentSearch = getServiceQuery();
+        fetchServices(true);
     };
 
     if (serviceSearch) {
@@ -311,8 +410,11 @@ $flagMap = [
     }
 
     if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => {
+        loadMoreBtn.addEventListener('click', async () => {
             visibleCount += 10;
+            if (visibleCount > serviceButtons.length && serviceOffset < totalServices) {
+                await fetchServices(false);
+            }
             updateServiceVisibility();
         });
     }
@@ -329,23 +431,26 @@ $flagMap = [
             card.innerHTML = `
                 <h4 class="font-semibold">${service.name}</h4>
                 <p class="text-sm text-slate-500">Code: ${service.code}</p>
-                <p class="mt-2 font-semibold text-primary">$${Number(service.display_price ?? service.price).toFixed(4)}</p>
+                <p class="mt-2 font-semibold text-primary">XAF ${Number(service.display_price ?? service.price).toFixed(4)}</p>
             `;
             availableServicesEl.appendChild(card);
         });
         availableCursor += slice.length;
-        if (availableCursor >= servicesData.length) {
+        if (availableCursor >= servicesData.length && serviceOffset >= totalServices) {
             loadMoreAvailable.classList.add('hidden');
+        } else {
+            loadMoreAvailable.classList.remove('hidden');
         }
     };
 
     if (loadMoreAvailable) {
-        loadMoreAvailable.addEventListener('click', renderAvailable);
+        loadMoreAvailable.addEventListener('click', async () => {
+            if (availableCursor >= servicesData.length && serviceOffset < totalServices) {
+                await fetchServices(false);
+            }
+            renderAvailable();
+        });
     }
-
-    renderAvailable();
-    updateServiceVisibility();
-    setActiveType('buy');
 
     const boostServiceSelect = document.getElementById('boostServiceSelect');
     const boostServiceMeta = document.getElementById('boostServiceMeta');
@@ -363,13 +468,19 @@ $flagMap = [
         const min = option.dataset.min || '-';
         const max = option.dataset.max || '-';
         const type = option.dataset.type || '';
-        boostServiceMeta.textContent = `Type: ${type} · Rate: $${rate} per 1000 · Min: ${min} · Max: ${max}`;
+        boostServiceMeta.textContent = `Type: ${type} · Rate: XAF ${rate} per 1000 · Min: ${min} · Max: ${max}`;
     };
 
     if (boostServiceSelect) {
         boostServiceSelect.addEventListener('change', updateBoostMeta);
         updateBoostMeta();
     }
+
+    fetchServices(true).then(() => {
+        renderAvailable();
+        updateServiceVisibility();
+        setActiveType('buy');
+    });
 
     const toggleServiceFilters = document.getElementById('toggleServiceFilters');
     const serviceFilters = document.getElementById('serviceFilters');

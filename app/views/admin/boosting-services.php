@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40">
+<div class="flex h-screen bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -87,7 +87,7 @@ $currentPath = current_path();
                                 <th class="p-3">Service</th>
                                 <th class="p-3">Category</th>
                                 <th class="p-3">Type</th>
-                                <th class="p-3">Rate (USD)</th>
+                                <th class="p-3">Rate (XAF)</th>
                                 <th class="p-3">Min</th>
                                 <th class="p-3">Max</th>
                                 <th class="p-3">Refill</th>
@@ -105,7 +105,7 @@ $currentPath = current_path();
                                         <td class="p-3"><?= htmlspecialchars($service['name']) ?></td>
                                         <td class="p-3"><?= htmlspecialchars($service['category'] ?? '-') ?></td>
                                         <td class="p-3"><?= htmlspecialchars($service['type'] ?? '-') ?></td>
-                                        <td class="p-3">$<?= number_format((float)$service['rate'], 4) ?></td>
+                                        <td class="p-3">XAF <?= format_xaf((float)$service['rate'], 4) ?></td>
                                         <td class="p-3"><?= (int)$service['min_qty'] ?></td>
                                         <td class="p-3"><?= (int)$service['max_qty'] ?></td>
                                         <td class="p-3"><?= (int)$service['refill'] === 1 ? 'Yes' : 'No' ?></td>
@@ -116,6 +116,23 @@ $currentPath = current_path();
                         </tbody>
                     </table>
                 </div>
+                <?php if (($totalPages ?? 1) > 1): ?>
+                    <?php
+                        $currentPage = $currentPage ?? 1;
+                        $perPage = $perPage ?? 20;
+                        $totalServices = $totalServices ?? 0;
+                        $start = $totalServices > 0 ? (($currentPage - 1) * $perPage + 1) : 0;
+                        $end = $totalServices > 0 ? min($totalServices, $currentPage * $perPage) : 0;
+                    ?>
+                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p class="text-sm text-slate-500">Showing <?= $start ?>-<?= $end ?> of <?= (int)$totalServices ?></p>
+                        <div class="flex items-center gap-2">
+                            <a href="<?= url('/admin/boosting-services?page=' . max(1, $currentPage - 1)) ?>" class="px-3 py-1 rounded border border-slate-300 text-sm <?= $currentPage <= 1 ? 'pointer-events-none opacity-50' : '' ?>">Previous</a>
+                            <span class="text-sm text-slate-600">Page <?= (int)$currentPage ?> of <?= (int)($totalPages ?? 1) ?></span>
+                            <a href="<?= url('/admin/boosting-services?page=' . min(($totalPages ?? 1), $currentPage + 1)) ?>" class="px-3 py-1 rounded border border-slate-300 text-sm <?= $currentPage >= ($totalPages ?? 1) ? 'pointer-events-none opacity-50' : '' ?>">Next</a>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </section>
         </div>
     </div>
