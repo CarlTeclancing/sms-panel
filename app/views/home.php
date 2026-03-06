@@ -1,4 +1,4 @@
-<style>
+<!-- <style>
     body {
         background: 
             radial-gradient(62.5% 17.09% at 20% 20%, rgba(20, 110, 245, 0.18) 0%, rgba(20, 110, 245, 0) 100%),
@@ -8,7 +8,7 @@
             #F0F0F0 !important;
         background-attachment: fixed !important;
     }
-</style>
+</style> -->
 <section class="flex justify-center pb-12 items-center reveal">
     <div class="fade-in-up">
         <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 text-xs text-slate-600">
@@ -199,7 +199,7 @@
                 
                 <div class="lg:w-1/2 lg:pl-8">
                     <div class="">
-                        <img src="<?= url('/uploads/create-account.png') ?>" alt="Create Account" class="w-full object-cover ">
+                        <img src="<?= url('/uploads/SighnUp.png') ?>" alt="Create Account" class="w-full object-cover ">
                     </div>
                 </div>
             </div>
