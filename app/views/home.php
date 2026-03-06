@@ -1,69 +1,70 @@
-<section class="grid lg:grid-cols-2 gap-10 items-center reveal">
+<style>
+    body {
+        background: 
+            radial-gradient(62.5% 17.09% at 20% 20%, rgba(20, 110, 245, 0.18) 0%, rgba(20, 110, 245, 0) 100%),
+            radial-gradient(52.08% 14.25% at 80% 0%, rgba(122, 61, 255, 0.16) 0%, rgba(122, 61, 255, 0) 100%),
+            radial-gradient(46.87% 12.82% at 50% 100%, rgba(237, 82, 203, 0.12) 0%, rgba(237, 82, 203, 0) 100%),
+
+            #F0F0F0 !important;
+        background-attachment: fixed !important;
+    }
+</style>
+<section class="flex justify-center pb-12 items-center reveal">
     <div class="fade-in-up">
         <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 text-xs text-slate-600">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             Cheaper. Faster. Global.
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mt-4">Get verified, stay connected, &amp; grow your socials instantly!</h1>
+        <div class="flex justify-center items-center text-center flex-col">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mt-4">Get verified, stay connected, &amp; grow your socials instantly!</h1>
         <p class="mt-4 text-slate-600 text-lg">Rent numbers, receive SMS codes, get global eSIMs, and boost your social media quick, secure, and hassle-free.</p>
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 my-16">
             <a href="<?= url('/register') ?>" class="bg-primary text-white px-6 py-3 rounded soft-btn">Get started</a>
             <a href="<?= url('/services') ?>" class="border border-slate-300 text-slate-700 px-6 py-3 rounded soft-btn">Explore services</a>
         </div>
-        <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div class="card p-4 fade-in-up fade-in-delay-1">
-                <p class="text-xs text-slate-500">Active Users</p>
-                <p class="text-2xl font-semibold mt-1" data-counter data-target="10000" data-suffix="+">0</p>
+        </div>
+         
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-center items-center ">
+            <div class="card flex flex-col justify-center gap-4 p-2 w-full sm:w-[218px] h-32 fade-in-up fade-in-delay-1">
+                <div class="flex justify-between items-center">
+                   <p class="text-xs text-slate-500">Active Users</p>
+                   <i data-lucide="users" class="w-10 h-8 text-primary"></i>
+                </div>
+                 <p class="text-2xl font-semibold mt-1" data-counter data-target="10000" data-suffix="+">0</p>
+                
             </div>
-            <div class="card p-4 fade-in-up fade-in-delay-2">
-                <p class="text-xs text-slate-500">Engagement</p>
-                <p class="text-2xl font-semibold mt-1">Cheapest &amp; Fastest</p>
+            <div class="card flex flex-col justify-center gap-4 p-2 w-full sm:w-[218px] h-32 fade-in-up fade-in-delay-2">
+                <div class="flex justify-between items-center">
+                  <p class="text-xs text-slate-500">Engagement</p>
+                 <i data-lucide="messages-square" class="w-10 h-8 text-primary"></i>
+                </div>
+                 
+                  <p class="text-2xl font-semibold mt-1">Cheapest &amp; Fastest</p>
             </div>
-            <div class="card p-4 fade-in-up fade-in-delay-3">
-                <p class="text-xs text-slate-500">Coverage</p>
+            <div class="card flex flex-col justify-center gap-4 p-2 w-full sm:w-[218px] h-32 fade-in-up fade-in-delay-3">
+                <div class="flex justify-between items-center">
+                  <p class="text-xs text-slate-500">Coverage</p>
+                   <i data-lucide="globe" class="w-10 h-8 text-primary"></i>
+                </div>
+               
                 <p class="text-2xl font-semibold mt-1" data-counter data-target="10" data-suffix="+">0</p>
+            </div> 
+            <div class="card flex flex-col justify-center gap-4 p-2 w-full sm:w-[218px] h-32 fade-in-up fade-in-delay-4 ">
+                <div class="flex justify-between items-center">
+                <p class="text-xs text-slate-500">Avg delivery time</p>
+                <i data-lucide="clock" class="w-10 h-8 text-primary"></i>
             </div>
-        </div>
-    </div>
-    <div class="relative reveal">
-        <div class="card p-6 overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80" alt="Dashboard preview" class="w-full h-64 object-cover rounded-lg float-slow">
-            <div class="mt-6 grid grid-cols-2 gap-3">
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <div class="flex items-center gap-2 text-sm text-slate-600">
-                        <i data-lucide="shield-check" class="w-4 h-4"></i>
-                        Secure verification
-                    </div>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <div class="flex items-center gap-2 text-sm text-slate-600">
-                        <i data-lucide="bolt" class="w-4 h-4"></i>
-                        Instant delivery
-                    </div>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <div class="flex items-center gap-2 text-sm text-slate-600">
-                        <i data-lucide="globe" class="w-4 h-4"></i>
-                        Global reach
-                    </div>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <div class="flex items-center gap-2 text-sm text-slate-600">
-                        <i data-lucide="sparkles" class="w-4 h-4"></i>
-                        Social growth
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="absolute -bottom-6 -left-6 card p-4 w-48 float-fast">
-            <p class="text-xs text-slate-500">Avg delivery time</p>
+              
             <p class="text-2xl font-semibold mt-1">&lt; 30s</p>
+        </div>
         </div>
     </div>
 </section>
+<section class="py-14 md:py-24  grid lg:grid-cols-2 gap-12 items-center reveal">
+   <img src="<?= url('/uploads/vectorfast.png') ?>" class="w-full  object-cover">
 
-<section class="mt-12 grid lg:grid-cols-2 gap-6 reveal">
-    <div class="card p-6">
+
+     <div class="card p-6 shadow-xl">
         <h3 class="text-xl font-semibold">Cheapest and Fastest Engagements &amp; Online SMS Verification</h3>
         <p class="text-slate-600 mt-3">All the tools you need to verify, connect, and grow—built for speed and trust.</p>
         <div class="mt-6 grid sm:grid-cols-2 gap-4 text-sm">
@@ -105,32 +106,50 @@
             </div>
         </div>
     </div>
-
-    <div class="card p-6">
+</section>
+<section class="py-14 md:py-24 grid lg:grid-cols-2 gap-6 items-center reveal">
+    <div class="card p-6 shadow-xl">
         <h3 class="text-xl font-semibold">Plus 10 countries and numbers for different services</h3>
         <p class="text-slate-600 mt-3">Access a wide selection of countries for verification and eSIM services.</p>
         <div class="mt-4 grid grid-cols-2 gap-3 text-sm text-slate-600">
-            <div class="flex items-center gap-2"><span>🇺🇸</span> United States</div>
-            <div class="flex items-center gap-2"><span>🇬🇧</span> United Kingdom</div>
-            <div class="flex items-center gap-2"><span>🇨🇲</span> Cameroon</div>
-            <div class="flex items-center gap-2"><span>🇳🇬</span> Nigeria</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('US') ?></span> United States</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('GB') ?></span> United Kingdom</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('CM') ?></span> Cameroon</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('NG') ?></span> Nigeria</div>
 
-            <div class="flex items-center gap-2"><span>🇫🇷</span> France</div>
-            <div class="flex items-center gap-2"><span>🇩🇪</span> Germany</div>
-            <div class="flex items-center gap-2"><span>🇨🇳</span> China</div>
-            <div class="flex items-center gap-2"><span>🇮🇳</span> India</div>
-            <div class="flex items-center gap-2"><span>🇨🇦</span> Canada</div>
-            <div class="flex items-center gap-2"><span>🇷🇺</span> Russia</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('FR') ?></span> France</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('DE') ?></span> Germany</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('CN') ?></span> China</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('IN') ?></span> India</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('CA') ?></span> Canada</div>
+            <div class="flex items-center gap-2"><span><?= getFlag('RU') ?></span> Russia</div>
         </div>
     </div>
-</section>
+   <img src="<?= url('/uploads/vectorinternet.png') ?>" class="w-full  object-cover">
 
-<section class="mt-12 reveal">
-    <div class="flex items-center justify-between">
-        <h3 class="text-xl font-semibold">Top 20 Number Services</h3>
-        <span class="text-sm text-slate-500">Best sellers</span>
+</section>
+<section class="reveal py-14 md:py-24 rid lg:grid-cols-2 gap-6 items-center">
+    <h1 class="ext-4xl md:text-5xl font-bold text-slate-900 mt-4 text-center py-4">
+        Everything You Need: Secure Numbers, eSIMs & Social Scaling
+    </h1>'
+    <div class="flex justify-center items-center">
+ <div class="grid lg:grid-cols-2 gap-4 items-center">
+        <div class=" card p-6 reveal">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-col">
+                    <h3 class="text-xl font-semibold">Sell Accounts</h3>
+                    <span class="text-sm text-slate-500">Top 20 Number Services</span>
+                </div>
+               <img src="<?= url('/uploads/flag.png') ?>" class="w-1/4  object-cover">
+            </div>
+       
+         <div id="homeServices" class="mt-4 grid  gap-4"></div>
+      </div>
+      <img src="<?= url('/uploads/boost-social-media.png') ?>" class="w-full h-full  object-cover">
+   </div>
+    
     </div>
-    <div id="homeServices" class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  
 </section>
 
 <section class="mt-12 reveal">
@@ -158,42 +177,87 @@
         <?php endif; ?>
     </div>
 </section>
-
-<section class="mt-12 grid lg:grid-cols-2 gap-6 items-center reveal">
-    <div class="card p-6">
-        <h3 class="text-xl font-semibold">Dashboard showcase</h3>
-        <p class="text-slate-600 mt-3">Track orders, manage wallet, and monitor activity in one clean dashboard.</p>
-        <div class="mt-4 space-y-3 text-sm text-slate-600">
-            <div class="flex items-center gap-2"><i data-lucide="bar-chart-3" class="w-4 h-4"></i> Real-time analytics</div>
-            <div class="flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4"></i> Wallet overview</div>
-            <div class="flex items-center gap-2"><i data-lucide="bell" class="w-4 h-4"></i> Status updates</div>
+<section class="reveal py-14 md:py-24 ">
+    <h3 class="text-2xl font-semibold text-center mb-16 text-slate-900">How It Works</h3>
+    
+    <div class="relative max-w-6xl mx-auto px-6">
+        <div class="absolute inset-0 flex justify-center">
+            <div class="w-1 h-full bg-blue-500 hidden lg:block z-0"></div>
         </div>
-    </div>
-    <div class="card p-6">
-        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="Dashboard showcase" class="w-full h-72 object-cover rounded-lg">
+        
+        <div class="space-y-24 relative z-10">
+        
+            <div class="flex flex-col lg:flex-row items-start gap-12 fade-in-up fade-in-delay-1 relative">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 hidden lg:block z-20">
+                    <div class="w-12 h-12 bg-blue-600 text-white flex items-center justify-center rounded-2xl font-bold text-lg shadow-2xl border-4 border-white">1</div>
+                </div>
+                
+                <div class="lg:w-1/2 lg:pr-8">
+                    <h4 class="text-xl font-semibold text-slate-900 mb-4">Sign Up</h4>
+                    <p class="text-slate-600 mb-6 leading-relaxed">Number ServiceStart by signing up with your email, and other necessary details.</p>
+                </div>
+                
+                <div class="lg:w-1/2 lg:pl-8">
+                    <div class="">
+                        <img src="<?= url('/uploads/create-account.png') ?>" alt="Create Account" class="w-full object-cover ">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row-reverse items-start gap-12 fade-in-up fade-in-delay-2 relative">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 hidden lg:block z-20">
+                    <div class="w-12 h-12 bg-blue-600 text-white flex items-center justify-center rounded-2xl font-bold text-lg shadow-2xl border-4 border-white">2</div>
+                </div>
+                
+             
+                <div class="lg:w-1/2 lg:pl-8">
+                    <h4 class="text-xl font-semibold text-slate-900 mb-4">Fund Your Wallet</h4>
+                    <p class="text-slate-600 mb-6 leading-relaxed">Easily add funds using credit/debit cards, PayPal, or cryptocurrency.</p>
+                </div>
+                
+                <div class="lg:w-1/2 lg:pr-8">
+                    <div class="">
+                        <img src="<?= url('/uploads/Waller.png') ?>" alt="Fund Wallet" class="w-full object-cover">
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row items-start gap-12 fade-in-up fade-in-delay-3 relative">
+    
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 hidden lg:block z-20">
+                    <div class="w-12 h-12 bg-blue-600 text-white flex items-center justify-center rounded-2xl font-bold text-lg shadow-2xl border-4 border-white">3</div>
+                </div>
+                <div class="lg:w-1/2 lg:pr-8">
+                    <h4 class="text-xl font-semibold text-slate-900 mb-4">Select the Service You Need</h4>
+                    <p class="text-slate-600 mb-6 leading-relaxed">Choose from our range of services</p>
+                </div>
+                <div class="lg:w-1/2 lg:pl-8">
+                    <div class="">
+                        <img src="<?= url('/uploads/select-service.png') ?>" alt="Select Service" class="w-full object-cover ">
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row-reverse items-start gap-12 fade-in-up fade-in-delay-4 relative">
+        
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 hidden lg:block z-20">
+                    <div class="w-12 h-12 bg-blue-600 text-white flex items-center justify-center rounded-2xl font-bold text-lg shadow-2xl border-4 border-white">4</div>
+                </div>
+          
+                <div class="lg:w-1/2 lg:pl-8">
+                    <h4 class="text-xl font-semibold text-slate-900 mb-4">Manage & Track Your Services</h4>
+                    <p class="text-slate-600 mb-6 leading-relaxed">Monitor your active services from a centralized dashboard.</p>
+                </div>
+                
+         
+                <div class="lg:w-1/2 lg:pr-8">
+                    <div class="">
+                        <img src="<?= url('/uploads/recent-purchasepng.png') ?>" alt="Track Services" class="w-full  object-cover ">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section class="mt-12 card p-6 reveal">
-    <h3 class="text-xl font-semibold">How It Works</h3>
-    <div class="mt-4 grid md:grid-cols-4 gap-4 text-sm text-slate-600">
-        <div class="border border-slate-200 rounded-lg p-4 bg-white">
-            <p class="font-semibold text-slate-900">Sign Up</p>
-            <p class="mt-2">Start by signing up with your email and basic details.</p>
-        </div>
-        <div class="border border-slate-200 rounded-lg p-4 bg-white">
-            <p class="font-semibold text-slate-900">Fund Your Wallet</p>
-            <p class="mt-2">Add funds using cards, PayPal, or crypto.</p>
-        </div>
-        <div class="border border-slate-200 rounded-lg p-4 bg-white">
-            <p class="font-semibold text-slate-900">Select a Service</p>
-            <p class="mt-2">Choose from SMS, eSIMs, or social boosting.</p>
-        </div>
-        <div class="border border-slate-200 rounded-lg p-4 bg-white">
-            <p class="font-semibold text-slate-900">Manage &amp; Track</p>
-            <p class="mt-2">Monitor everything in your dashboard.</p>
-        </div>
-    </div>
 </section>
 
 <section class="mt-12 grid lg:grid-cols-2 gap-6 reveal">
@@ -216,7 +280,7 @@
         </div>
         <div class="card p-4">
             <p class="font-semibold">What services does Panelsuite offer?</p>
-            <p class="text-sm text-slate-600 mt-2">GetSMS offers SMS verification, eSIMs, and social media boosting in one platform.</p>
+            <p class="text-sm text-slate-600 mt-2"> offers SMS verification, eSIMs, and social media boosting in one platform.</p>
         </div>
     </div>
 </section>
@@ -275,17 +339,22 @@
     const renderAll = () => {
         servicesData.forEach(service => {
             const card = document.createElement('div');
-            card.className = 'card p-4';
+            card.className = 'card p-2 ';
             card.innerHTML = `
                 <div class="flex items-center gap-2 text-sm text-slate-600">
-                    <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <i data-lucide="smartphone" class="w-4 h-4 text-primary"></i>
+                    <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-3 h-3 text-primary"></i>
                     </div>
                     <span>Number Service</span>
                 </div>
-                <h4 class="font-semibold mt-3">${service.name}</h4>
-                <p class="text-xs text-slate-500 mt-1">Code: ${service.code}</p>
-                <p class="mt-2 font-semibold text-primary">$${Number(service.display_price ?? service.price).toFixed(4)}</p>
+                <div class="flex justify-between items-start mt-1">
+                <div>
+                <h4 class="font-semibold mt-1">${service.name}</h4>
+                <p class="text-xs text-slate-500">Code: ${service.code}</p>
+                </div>
+                <p class="mt-1 font-semibold text-primary">$${Number(service.display_price ?? service.price).toFixed(4)}</p>
+               </div>
+                
             `;
             list.appendChild(card);
         });

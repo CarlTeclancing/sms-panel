@@ -23,13 +23,13 @@ if (file_exists($envPath)) {
 
 return [
     'app' => [
-        'name' => 'GetSMS',
-        'base_url' => getenv('APP_BASE_URL') ?: 'http://localhost/getsms/public',
+        'name' => 'SMS Panel',
+        'base_url' => getenv('APP_BASE_URL') ?: 'http://localhost/sms-panel/public',
         'primary_color' => '#1D4ED8', // royal blue
     ],
     'db' => [
         'host' => getenv('DB_HOST') ?: '127.0.0.1',
-        'name' => getenv('DB_NAME') ?: 'getsms',
+        'name' => getenv('DB_NAME') ?: 'sns-panel',
         'user' => getenv('DB_USER') ?: 'root',
         'pass' => getenv('DB_PASS') ?: '',
         'charset' => 'utf8mb4',
