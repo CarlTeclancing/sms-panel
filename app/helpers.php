@@ -1,5 +1,26 @@
 <?php
 
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool
+    {
+        return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(string $haystack, string $needle): bool
+    {
+        return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
+    }
+}
+
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool
+    {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+
 function app_config(): array
 {
     static $config = null;
@@ -17,10 +38,19 @@ function render(string $view, array $data = []): void
     require __DIR__ . '/views/layout.php';
 }
 
+function ensure_public_base_url(string $baseUrl): string
+{
+    $baseUrl = rtrim($baseUrl, '/');
+    if (!str_ends_with($baseUrl, '/public')) {
+        $baseUrl .= '/public';
+    }
+    return $baseUrl;
+}
+
 function url(string $path = ''): string
 {
     $config = app_config();
-    $base = rtrim($config['app']['base_url'], '/');
+    $base = ensure_public_base_url($config['app']['base_url']);
     $path = ltrim($path, '/');
     return $base . '/' . $path;
 }
@@ -38,7 +68,7 @@ function current_path(): string
 function redirect(string $path): void
 {
     $config = app_config();
-    $baseUrl = rtrim($config['app']['base_url'], '/');
+    $baseUrl = ensure_public_base_url($config['app']['base_url']);
     header('Location: ' . $baseUrl . $path);
     exit;
 }
@@ -122,6 +152,21 @@ function price_with_markup(float $amount, ?string $percent = null): float
         return $amount;
     }
     return $amount * (1 + ($percentValue / 100));
+}
+
+function convert_usd_to_xaf(float $amount): float
+{
+    $rateRaw = setting('usd_to_xaf_rate', '1');
+    $rate = is_numeric($rateRaw) ? (float)$rateRaw : 1.0;
+    if ($rate <= 0) {
+        $rate = 1.0;
+    }
+    return $amount * $rate;
+}
+
+function format_xaf(float $amount, int $decimals = 2): string
+{
+    return number_format(convert_usd_to_xaf($amount), $decimals);
 }
 
 function slugify(string $value): string

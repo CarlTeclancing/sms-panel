@@ -15,4 +15,11 @@ class SellerFeeRepository
         $stmt->execute([$userId, $amount, $ref]);
         return (int)db()->lastInsertId();
     }
+
+    public function totalCollected(): float
+    {
+        $stmt = db()->query('SELECT SUM(amount) AS total FROM seller_fees');
+        $row = $stmt->fetch();
+        return (float)($row['total'] ?? 0);
+    }
 }

@@ -15,12 +15,9 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen w-full bg-slate-50/60 backdrop-blur-xl overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40 backdrop-blur-xl">
+<div class="flex h-screen w-full bg-slate-50/60 backdrop-blur-xl overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40 backdrop-blur-xl">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
-            <?php if (!empty($logo)): ?>
-                <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
-            <?php endif; ?>
             <div>
                 <p class="text-lg font-semibold text-slate-900">Admin Panel</p>
                 <p class="text-xs text-slate-500">GetSMS Control</p>
@@ -79,11 +76,30 @@ $currentPath = current_path();
                 </div>
                 <div class="bg-white border border-slate-200 rounded-lg p-4">
                     <p class="text-sm text-slate-500">Total revenue</p>
-                    <p class="text-2xl font-semibold mt-1">$<?= number_format((float)($totalRevenue ?? 0), 4) ?></p>
+                    <p class="text-2xl font-semibold mt-1">XAF <?= number_format((float)($totalRevenue ?? 0), 4) ?></p>
                 </div>
                 <div class="bg-white border border-slate-200 rounded-lg p-4">
                     <p class="text-sm text-slate-500">Total services</p>
                     <p class="text-2xl font-semibold mt-1"><?= number_format((int)($totalServices ?? 0)) ?></p>
+                </div>
+            </section>
+
+            <section class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <p class="text-sm text-slate-500">Total user balance</p>
+                    <p class="text-2xl font-semibold mt-1">XAF <?= number_format((float)($walletTotals['total_balance'] ?? 0), 2) ?></p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <p class="text-sm text-slate-500">Earnings from listings</p>
+                    <p class="text-2xl font-semibold mt-1">XAF <?= number_format((float)($listingEarnings ?? 0), 2) ?></p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <p class="text-sm text-slate-500">Pending payouts</p>
+                    <p class="text-2xl font-semibold mt-1">XAF <?= number_format((float)($pendingPayouts ?? 0), 2) ?></p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-4">
+                    <p class="text-sm text-slate-500">Gross balance</p>
+                    <p class="text-2xl font-semibold mt-1">XAF <?= number_format((float)($grossBalance ?? 0), 2) ?></p>
                 </div>
             </section>
 
@@ -94,6 +110,27 @@ $currentPath = current_path();
                 </div>
                 <div class="mt-4">
                     <canvas id="performanceChart" height="120"></canvas>
+                </div>
+            </section>
+
+            <section class="grid lg:grid-cols-2 gap-6">
+                <div class="bg-white border border-slate-200 rounded-lg p-5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">User growth</h3>
+                        <span class="text-sm text-slate-500">Last 14 days</span>
+                    </div>
+                    <div class="mt-4">
+                        <canvas id="signupChart" height="140"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-lg p-5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Wallet flows</h3>
+                        <span class="text-sm text-slate-500">Last 14 days</span>
+                    </div>
+                    <div class="mt-4">
+                        <canvas id="walletChart" height="140"></canvas>
+                    </div>
                 </div>
             </section>
         </div>
@@ -145,8 +182,29 @@ $currentPath = current_path();
     }
 
     const dailyRevenue = <?php echo json_encode($dailyRevenue ?? []); ?>;
+    const dailySignups = <?php echo json_encode($dailySignups ?? []); ?>;
+    const dailyTopups = <?php echo json_encode($dailyTopups ?? []); ?>;
+    const dailyPurchases = <?php echo json_encode($dailyPurchases ?? []); ?>;
+    const dailyWithdrawals = <?php echo json_encode($dailyWithdrawals ?? []); ?>;
+
     const labels = dailyRevenue.map(item => item.day);
-    const values = dailyRevenue.map(item => Number(item.total || 0));
+    const revenueValues = dailyRevenue.map(item => Number(item.total || 0));
+
+    const mapToLabels = (items, sourceLabels) => {
+        const lookup = {};
+        items.forEach(item => {
+            if (!item || !item.day) return;
+            lookup[item.day] = Number(item.total || 0);
+        });
+        return sourceLabels.map(label => lookup[label] || 0);
+    };
+
+    const signupLabels = dailySignups.map(item => item.day);
+    const signupValues = dailySignups.map(item => Number(item.total || 0));
+
+    const topupValues = mapToLabels(dailyTopups, labels);
+    const purchaseValues = mapToLabels(dailyPurchases, labels);
+    const withdrawalValues = mapToLabels(dailyWithdrawals, labels);
 
     const chartScript = document.createElement('script');
     chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
@@ -159,7 +217,7 @@ $currentPath = current_path();
                 labels,
                 datasets: [{
                     label: 'Revenue',
-                    data: values,
+                    data: revenueValues,
                     borderColor: '#1D4ED8',
                     backgroundColor: 'rgba(29, 78, 216, 0.12)',
                     fill: true,
@@ -174,6 +232,74 @@ $currentPath = current_path();
                 }
             }
         });
+
+        const signupCtx = document.getElementById('signupChart');
+        if (signupCtx) {
+            new Chart(signupCtx, {
+                type: 'bar',
+                data: {
+                    labels: signupLabels,
+                    datasets: [{
+                        label: 'New users',
+                        data: signupValues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.25)',
+                        borderColor: '#10B981',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        const walletCtx = document.getElementById('walletChart');
+        if (walletCtx) {
+            new Chart(walletCtx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Topups',
+                            data: topupValues,
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 2,
+                        },
+                        {
+                            label: 'Purchases',
+                            data: purchaseValues,
+                            borderColor: '#F97316',
+                            backgroundColor: 'rgba(249, 115, 22, 0.12)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 2,
+                        },
+                        {
+                            label: 'Withdrawals',
+                            data: withdrawalValues,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 2,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
     };
     document.head.appendChild(chartScript);
 </script>

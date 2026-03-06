@@ -39,6 +39,28 @@
                             <label class="block text-sm font-medium">Email</label>
                             <input name="email" type="email" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars(current_user()['email'] ?? '') ?>" required>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium">Phone number</label>
+                            <input name="phone_number" type="tel" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" value="<?= htmlspecialchars(current_user()['phone_number'] ?? '') ?>" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Country</label>
+                            <?php
+                                $countries = [
+                                    'Cameroon', 'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Cote d’Ivoire', 'Senegal', 'Uganda',
+                                    'Tanzania', 'Rwanda', 'Zambia', 'Zimbabwe', 'Egypt', 'Morocco', 'Algeria', 'Tunisia',
+                                    'United States', 'Canada', 'United Kingdom', 'France', 'Germany', 'Spain', 'Italy',
+                                    'India', 'Pakistan', 'Bangladesh', 'United Arab Emirates', 'Saudi Arabia'
+                                ];
+                                $selectedCountry = current_user()['country'] ?? '';
+                            ?>
+                            <select name="country" class="mt-1 w-full border border-slate-300 rounded px-3 py-2" required>
+                                <option value="">Select country</option>
+                                <?php foreach ($countries as $country): ?>
+                                    <option value="<?= htmlspecialchars($country) ?>" <?= $selectedCountry === $country ? 'selected' : '' ?>><?= htmlspecialchars($country) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     </div>
                     <button class="bg-primary text-white px-4 py-2 rounded">Save changes</button>
                 </form>
@@ -80,7 +102,7 @@
 
             <section id="referrals" class="profile-panel hidden bg-white border border-slate-200 rounded p-5">
                 <h3 class="text-lg font-semibold">Referral program</h3>
-                <p class="text-sm text-slate-500 mt-1">Share your link and earn $1 after a referral makes their first deposit.</p>
+                <p class="text-sm text-slate-500 mt-1">Share your link and earn 1 XAF after a referral makes their first deposit.</p>
                 <div class="mt-4 grid md:grid-cols-3 gap-4">
                     <div class="border border-slate-200 rounded p-4">
                         <p class="text-xs text-slate-500">Referral link</p>
@@ -92,7 +114,7 @@
                     </div>
                     <div class="border border-slate-200 rounded p-4">
                         <p class="text-xs text-slate-500">Earnings</p>
-                        <p class="text-2xl font-semibold mt-2">$<?= number_format((float)($referralEarnings ?? 0), 2) ?></p>
+                        <p class="text-2xl font-semibold mt-2">XAF <?= number_format((float)($referralEarnings ?? 0), 2) ?></p>
                     </div>
                 </div>
             </section>

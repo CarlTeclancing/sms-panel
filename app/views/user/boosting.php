@@ -8,6 +8,7 @@
     <p class="text-sm text-slate-500">Place social media engagement orders via Peakerr.</p>
 </div>
 
+<?php if ($user): ?>
 <form method="post" action="<?= url('/boost/order') ?>" class="mt-4 bg-slate-50 border border-slate-200 rounded p-6">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <div class="grid md:grid-cols-2 gap-4">
@@ -62,6 +63,12 @@
     </div>
     <button class="mt-4 bg-primary text-white px-6 py-2 rounded" <?= empty($boostingServices) ? 'disabled' : '' ?>>Place boosting order</button>
 </form>
+<?php else: ?>
+<div class="mt-4 bg-slate-50 border border-slate-200 rounded p-6 text-center">
+    <p class="mb-4 text-slate-600">You must <a href="<?= url('/login') ?>" class="text-primary underline">login</a> to place boosting orders.</p>
+    <a href="<?= url('/login') ?>" class="bg-primary text-white px-6 py-2 rounded">Login to boost</a>
+</div>
+<?php endif; ?>
 
 <script>
     const boostServiceSelect = document.getElementById('boostServiceSelect');
@@ -80,7 +87,7 @@
         const min = option.dataset.min || '-';
         const max = option.dataset.max || '-';
         const type = option.dataset.type || '';
-        boostServiceMeta.textContent = `Type: ${type} · Rate: $${rate} per 1000 · Min: ${min} · Max: ${max}`;
+        boostServiceMeta.textContent = `Type: ${type} · Rate: XAF ${rate} per 1000 · Min: ${min} · Max: ${max}`;
     };
 
     if (boostServiceSelect) {

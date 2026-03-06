@@ -169,7 +169,7 @@
                     </div>
                     <h4 class="font-semibold mt-3"><?= htmlspecialchars($smm['name']) ?></h4>
                     <p class="text-xs text-slate-500 mt-1"><?= htmlspecialchars($smm['type'] ?? 'Standard') ?></p>
-                    <p class="mt-3 font-semibold text-primary">$<?= number_format((float)($smm['display_rate'] ?? $smm['rate']), 4) ?> / 1k</p>
+                    <p class="mt-3 font-semibold text-primary">XAF <?= format_xaf((float)($smm['display_rate'] ?? $smm['rate']), 4) ?> / 1k</p>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>

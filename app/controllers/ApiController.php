@@ -106,7 +106,7 @@ class ApiController
             $this->json(['success' => false, 'message' => 'Invalid rental duration'], 422);
         }
 
-        $response = $client->getNumber($countryId, (int)$service['smsman_application_id'], null, 'USD', $isRent ? true : null);
+        $response = $client->getNumber($countryId, (int)$service['smsman_application_id'], null, 'XAF', $isRent ? true : null);
 
         if (!isset($response['request_id'])) {
             $this->json(['success' => false, 'message' => $response['error_msg'] ?? 'Failed'], 500);

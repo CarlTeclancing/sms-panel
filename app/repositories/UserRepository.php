@@ -2,6 +2,22 @@
 
 class UserRepository
 {
+    private function userColumns(): array
+    {
+        static $columns = null;
+        if ($columns === null) {
+            $stmt = db()->query('SHOW COLUMNS FROM users');
+            $rows = $stmt->fetchAll();
+            $columns = array_map(static fn($row) => $row['Field'] ?? '', $rows);
+        }
+        return $columns;
+    }
+
+    private function hasUserColumn(string $column): bool
+    {
+        return in_array($column, $this->userColumns(), true);
+    }
+
     public function findByEmail(string $email): ?array
     {
         $stmt = db()->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
@@ -39,10 +55,31 @@ class UserRepository
         $balanceTopup = (float)($data['balance_topup'] ?? ($data['balance'] ?? 0));
         $balanceEarnings = (float)($data['balance_earnings'] ?? 0);
         $totalBalance = $balanceTopup + $balanceEarnings;
-        $stmt = db()->prepare('INSERT INTO users (name, email, password_hash, role, balance, balance_topup, balance_earnings, profile_image, referral_code, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([
-            $data['name'],
-            $data['email'],
+        $columns = ['name', 'email'];
+        $values = [$data['name'], $data['email']];
+
+        if ($this->hasUserColumn('phone_number')) {
+            $columns[] = 'phone_number';
+            $values[] = $data['phone_number'] ?? null;
+        }
+
+        if ($this->hasUserColumn('country')) {
+            $columns[] = 'country';
+            $values[] = $data['country'] ?? null;
+        }
+
+        $columns = array_merge($columns, [
+            'password_hash',
+            'role',
+            'balance',
+            'balance_topup',
+            'balance_earnings',
+            'profile_image',
+            'referral_code',
+            'referred_by',
+        ]);
+
+        $values = array_merge($values, [
             $data['password_hash'],
             $data['role'] ?? 'user',
             $totalBalance,
@@ -52,12 +89,24 @@ class UserRepository
             $data['referral_code'] ?? null,
             $data['referred_by'] ?? null,
         ]);
+
+        $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+        $stmt = db()->prepare('INSERT INTO users (' . implode(', ', $columns) . ') VALUES (' . $placeholders . ')');
+        $stmt->execute($values);
         return (int)db()->lastInsertId();
     }
 
     public function all(): array
     {
-        $stmt = db()->query('SELECT id, name, email, role, balance, balance_topup, balance_earnings, active, created_at FROM users ORDER BY id DESC');
+        $columns = ['id', 'name', 'email'];
+        if ($this->hasUserColumn('phone_number')) {
+            $columns[] = 'phone_number';
+        }
+        if ($this->hasUserColumn('country')) {
+            $columns[] = 'country';
+        }
+        $columns = array_merge($columns, ['role', 'balance', 'balance_topup', 'balance_earnings', 'active', 'created_at']);
+        $stmt = db()->query('SELECT ' . implode(', ', $columns) . ' FROM users ORDER BY id DESC');
         return $stmt->fetchAll();
     }
 
@@ -91,22 +140,49 @@ class UserRepository
         $stmt->execute([$amount, $amount, $userId]);
     }
 
-    public function updateProfile(int $userId, string $name, string $email, string $role): void
+    public function updateProfile(int $userId, string $name, string $email, string $role, ?string $phoneNumber, ?string $country): void
     {
-        $stmt = db()->prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?');
-        $stmt->execute([$name, $email, $role, $userId]);
-    }
+        $columns = ['name = ?', 'email = ?', 'role = ?'];
+        $values = [$name, $email, $role];
 
-    public function updateProfileInfo(int $userId, string $name, string $email, ?string $profileImage): void
-    {
-        if ($profileImage !== null) {
-            $stmt = db()->prepare('UPDATE users SET name = ?, email = ?, profile_image = ? WHERE id = ?');
-            $stmt->execute([$name, $email, $profileImage, $userId]);
-            return;
+        if ($this->hasUserColumn('phone_number')) {
+            $columns[] = 'phone_number = ?';
+            $values[] = $phoneNumber;
         }
 
-        $stmt = db()->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?');
-        $stmt->execute([$name, $email, $userId]);
+        if ($this->hasUserColumn('country')) {
+            $columns[] = 'country = ?';
+            $values[] = $country;
+        }
+
+        $values[] = $userId;
+        $stmt = db()->prepare('UPDATE users SET ' . implode(', ', $columns) . ' WHERE id = ?');
+        $stmt->execute($values);
+    }
+
+    public function updateProfileInfo(int $userId, string $name, string $email, ?string $phoneNumber, ?string $country, ?string $profileImage): void
+    {
+        $columns = ['name = ?', 'email = ?'];
+        $values = [$name, $email];
+
+        if ($this->hasUserColumn('phone_number')) {
+            $columns[] = 'phone_number = ?';
+            $values[] = $phoneNumber;
+        }
+
+        if ($this->hasUserColumn('country')) {
+            $columns[] = 'country = ?';
+            $values[] = $country;
+        }
+
+        if ($profileImage !== null) {
+            $columns[] = 'profile_image = ?';
+            $values[] = $profileImage;
+        }
+
+        $values[] = $userId;
+        $stmt = db()->prepare('UPDATE users SET ' . implode(', ', $columns) . ' WHERE id = ?');
+        $stmt->execute($values);
     }
 
     public function updateStoreProfile(int $userId, string $storeName, string $storeSlug, string $storeTagline, string $storeDescription): void
@@ -158,5 +234,23 @@ class UserRepository
         $stmt = db()->query('SELECT COUNT(*) AS total FROM users');
         $row = $stmt->fetch();
         return (int)($row['total'] ?? 0);
+    }
+
+    public function walletTotals(): array
+    {
+        $stmt = db()->query('SELECT SUM(balance) AS total_balance, SUM(balance_topup) AS total_topup, SUM(balance_earnings) AS total_earnings FROM users');
+        $row = $stmt->fetch();
+        return [
+            'total_balance' => (float)($row['total_balance'] ?? 0),
+            'total_topup' => (float)($row['total_topup'] ?? 0),
+            'total_earnings' => (float)($row['total_earnings'] ?? 0),
+        ];
+    }
+
+    public function dailySignups(int $days = 7): array
+    {
+        $stmt = db()->prepare('SELECT DATE(created_at) AS day, COUNT(*) AS total FROM users WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) GROUP BY DATE(created_at) ORDER BY day ASC');
+        $stmt->execute([$days]);
+        return $stmt->fetchAll();
     }
 }

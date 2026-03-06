@@ -1,6 +1,32 @@
 <?php
 session_start();
 
+$logDir = __DIR__ . '/../app/cache';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0755, true);
+}
+$errorLog = $logDir . '/app-error.log';
+
+set_error_handler(static function ($severity, $message, $file, $line) use ($errorLog) {
+    $entry = '[' . date('c') . "] PHP ERROR {$severity}: {$message} in {$file} on line {$line}\n";
+    @file_put_contents($errorLog, $entry, FILE_APPEND);
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    http_response_code(500);
+    echo 'Server error. Please try again later.';
+    exit;
+});
+
+set_exception_handler(static function (Throwable $e) use ($errorLog) {
+    $entry = '[' . date('c') . '] EXCEPTION: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() . "\n";
+    $entry .= $e->getTraceAsString() . "\n";
+    @file_put_contents($errorLog, $entry, FILE_APPEND);
+    http_response_code(500);
+    echo 'Server error. Please try again later.';
+    exit;
+});
+
 require __DIR__ . '/../app/db.php';
 require __DIR__ . '/../app/helpers.php';
 require __DIR__ . '/../app/services/SmsManClient.php';
@@ -81,6 +107,18 @@ if ($path === '/login' && $method === 'POST') {
     $auth->login();
     exit;
 }
+if ($path === '/terms') {
+    render('terms', ['title' => 'Terms & Conditions']);
+    exit;
+}
+if ($path === '/privacy') {
+    render('privacy', ['title' => 'Privacy Policy']);
+    exit;
+}
+if ($path === '/returns') {
+    render('returns', ['title' => 'Return Policy']);
+    exit;
+}
 if ($path === '/logout' && $method === 'POST') {
     $auth->logout();
     exit;
@@ -93,13 +131,16 @@ if ($path === '/dashboard') {
 }
 
 if ($path === '/services') {
-    require_auth();
     $userController->services();
     exit;
 }
 
+if ($path === '/services/data') {
+    $userController->servicesData();
+    exit;
+}
+
 if ($path === '/accounts' && $method === 'GET') {
-    require_auth();
     $userController->accountsMarketplace();
     exit;
 }
@@ -141,7 +182,6 @@ if ($path === '/accounts/withdrawals' && $method === 'POST') {
 }
 
 if ($path === '/boosting') {
-    require_auth();
     $userController->boosting();
     exit;
 }

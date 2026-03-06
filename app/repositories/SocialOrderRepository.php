@@ -16,7 +16,7 @@ class SocialOrderRepository
             $data['status'] ?? 'pending',
             $data['charge'] ?? null,
             $data['remains'] ?? null,
-            $data['currency'] ?? 'USD',
+            $data['currency'] ?? 'XAF',
         ]);
         return (int)db()->lastInsertId();
     }

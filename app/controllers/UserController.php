@@ -68,19 +68,12 @@ class UserController
 
     public function services(): void
     {
-        $this->autoSyncBoostingServices();
-        $services = $this->services->allActive();
         $boostingServices = $this->socialServices->allActive();
         $smsMarkup = setting('sms_markup_percent', '0');
         $boostMarkup = setting('boost_markup_percent', '0');
 
-        foreach ($services as &$service) {
-            $service['display_price'] = price_with_markup((float)$service['price'], $smsMarkup);
-        }
-        unset($service);
-
         foreach ($boostingServices as &$boostService) {
-            $boostService['display_rate'] = price_with_markup((float)$boostService['rate'], $boostMarkup);
+            $boostService['display_rate'] = convert_usd_to_xaf(price_with_markup((float)$boostService['rate'], $boostMarkup));
         }
         unset($boostService);
         $config = app_config();
@@ -92,19 +85,55 @@ class UserController
         if (!is_array($countries) || isset($countries['success'])) {
             $countries = [];
         }
+        render('user/services', [
+            'title' => 'Buy Number',
+            'boostingServices' => $boostingServices,
+            'smsMarkup' => $smsMarkup,
+            'boostMarkup' => $boostMarkup,
+            'countries' => $countries,
+            'selectedCountryId' => (int)($_GET['country_id'] ?? 0),
+            'priceRange' => null,
+        ]);
+    }
 
-        $selectedCountryId = (int)($_GET['country_id'] ?? 0);
-        $prices = $client->getPrices($selectedCountryId);
+    public function servicesData(): void
+    {
+        $countryId = (int)($_GET['country_id'] ?? 0);
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
+        $limit = max(1, min(200, (int)($_GET['limit'] ?? 100)));
+        $search = trim((string)($_GET['search'] ?? ''));
+
+        $services = $this->services->allActive();
+        if ($search !== '') {
+            $services = array_values(array_filter($services, function ($service) use ($search) {
+                $name = strtolower((string)($service['name'] ?? ''));
+                return $name !== '' && str_contains($name, strtolower($search));
+            }));
+        }
+
+        $total = count($services);
+        $slice = array_slice($services, $offset, $limit);
+
+        $smsMarkup = setting('sms_markup_percent', '0');
+        foreach ($slice as &$service) {
+            $service['display_price'] = price_with_markup((float)$service['price'], $smsMarkup);
+        }
+        unset($service);
+
+        $config = app_config();
+        $client = new SmsManClient($config['smsman']);
+        $prices = $client->getPrices($countryId);
         if (is_array($prices) && isset($prices['data']) && is_array($prices['data'])) {
             $prices = $prices['data'];
         }
 
         $priceRange = null;
+        $availability = [];
         if (is_array($prices) && !isset($prices['success'])) {
             $min = null;
             $max = null;
-            if (isset($prices[(string)$selectedCountryId]) && is_array($prices[(string)$selectedCountryId])) {
-                foreach ($prices[(string)$selectedCountryId] as $entry) {
+            if (isset($prices[(string)$countryId]) && is_array($prices[(string)$countryId])) {
+                foreach ($prices[(string)$countryId] as $entry) {
                     if (!is_array($entry) || !isset($entry['cost'])) {
                         continue;
                     }
@@ -112,49 +141,57 @@ class UserController
                     $min = $min === null ? $cost : min($min, $cost);
                     $max = $max === null ? $cost : max($max, $cost);
                 }
-            }
-            if ($min !== null && $max !== null) {
-                $priceRange = ['min' => $min, 'max' => $max];
-            }
-        }
-        $availability = [];
-        if (is_array($prices) && !isset($prices['success'])) {
-            if (isset($prices[(string)$selectedCountryId])) {
-                foreach ($prices[(string)$selectedCountryId] as $appId => $entry) {
+                foreach ($prices[(string)$countryId] as $appId => $entry) {
                     $availability[(int)$appId] = (int)($entry['count'] ?? 0);
                 }
-            } elseif ($selectedCountryId === 0) {
-                foreach ($prices as $countryId => $apps) {
+            } elseif ($countryId === 0) {
+                foreach ($prices as $apps) {
                     if (!is_array($apps)) {
                         continue;
                     }
                     foreach ($apps as $appId => $entry) {
                         $availability[(int)$appId] = max($availability[(int)$appId] ?? 0, (int)($entry['count'] ?? 0));
+                        if (isset($entry['cost'])) {
+                            $cost = (float)$entry['cost'];
+                            $min = $min === null ? $cost : min($min, $cost);
+                            $max = $max === null ? $cost : max($max, $cost);
+                        }
                     }
                 }
             }
+            if ($min !== null && $max !== null) {
+                $priceRange = ['min' => $min, 'max' => $max];
+            }
         }
-        render('user/services', [
-            'title' => 'Buy Number',
-            'services' => $services,
-            'boostingServices' => $boostingServices,
-            'smsMarkup' => $smsMarkup,
-            'boostMarkup' => $boostMarkup,
-            'countries' => $countries,
-            'selectedCountryId' => $selectedCountryId,
-            'availability' => $availability,
-            'priceRange' => $priceRange,
+
+        foreach ($slice as &$service) {
+            $appId = (int)($service['smsman_application_id'] ?? 0);
+            $service['availability'] = $appId > 0 ? ($availability[$appId] ?? null) : null;
+        }
+        unset($service);
+
+        $this->json([
+            'services' => $slice,
+            'total' => $total,
+            'price_range' => $priceRange,
         ]);
+    }
+
+    private function json(array $data, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
     }
 
     public function boosting(): void
     {
-        $this->autoSyncBoostingServices();
         $boostingServices = $this->socialServices->allActive();
         $boostMarkup = setting('boost_markup_percent', '0');
 
         foreach ($boostingServices as &$boostService) {
-            $boostService['display_rate'] = price_with_markup((float)$boostService['rate'], $boostMarkup);
+            $boostService['display_rate'] = convert_usd_to_xaf(price_with_markup((float)$boostService['rate'], $boostMarkup));
         }
         unset($boostService);
 
@@ -225,7 +262,7 @@ class UserController
             'interval_minutes' => $interval > 0 ? $interval : null,
             'status' => 'pending',
             'charge' => $cost,
-            'currency' => 'USD',
+            'currency' => 'XAF',
         ]);
 
         $newTopupBalance = $topupBalance - $cost;
@@ -286,7 +323,7 @@ class UserController
             redirect('/services');
         }
 
-        $response = $client->getNumber($countryId, (int)$service['smsman_application_id'], null, 'USD', $isRent ? true : null);
+        $response = $client->getNumber($countryId, (int)$service['smsman_application_id'], null, 'XAF', $isRent ? true : null);
 
         if (!isset($response['request_id'])) {
             flash('error', $response['error_msg'] ?? 'Failed to get number.');
@@ -317,7 +354,6 @@ class UserController
 
         $this->transactions->create([
             'user_id' => $user['id'],
-            'type' => 'purchase',
             'amount' => -$cost,
             'ref' => 'smsman-' . $response['request_id'],
             'provider' => 'smsman',
@@ -409,9 +445,11 @@ class UserController
         $user = current_user();
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
+        $phoneNumber = trim($_POST['phone_number'] ?? '');
+        $country = trim($_POST['country'] ?? '');
 
-        if (!$name || !$email) {
-            flash('error', 'Name and email are required.');
+        if (!$name || !$email || !$phoneNumber || !$country) {
+            flash('error', 'Name, email, phone number, and country are required.');
             redirect('/profile');
         }
 
@@ -435,7 +473,7 @@ class UserController
             }
         }
 
-        $this->users->updateProfileInfo($user['id'], $name, $email, $profileImage);
+        $this->users->updateProfileInfo($user['id'], $name, $email, $phoneNumber, $country, $profileImage);
         $_SESSION['user'] = $this->users->findById($user['id']);
         flash('success', 'Profile updated.');
         redirect('/profile');

@@ -11,6 +11,11 @@ $currentPath = current_path();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'GetSMS') ?></title>
+    <?php $favicon = setting('favicon_path'); ?>
+    <?php if (!empty($favicon)): ?>
+        <link rel="icon" href="<?= htmlspecialchars(url($favicon)) ?>">
+        <link rel="apple-touch-icon" href="<?= htmlspecialchars(url($favicon)) ?>">
+    <?php endif; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -18,13 +23,32 @@ $currentPath = current_path();
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1D4ED8',
-                        danger: '#DC2626',
-                        surface: '#F8FAFC',
-                        muted: '#64748B'
+                        primary: '#146EF5',
+                        primaryAlt: '#006AFF',
+                        ink: '#080808',
+                        white: '#FFFFFF',
+                        surface: '#F0F0F0',
+                        muted: '#898989',
+                        border: '#D8D8D8',
+                        gray900: '#171717',
+                        gray800: '#222222',
+                        gray700: '#363636',
+                        gray600: '#5A5A5A',
+                        gray500: '#757575',
+                        gray400: '#898989',
+                        gray300: '#ABABAB',
+                        gray200: '#D8D8D8',
+                        gray100: '#F0F0F0',
+                        accentPurple: '#7A3DFF',
+                        accentPink: '#ED52CB',
+                        accentRed: '#EE1D36',
+                        accentOrange: '#FF6B00',
+                        accentGreen: '#00D722',
+                        accentYellow: '#FFAE13',
+                        danger: '#EE1D36'
                     },
                     boxShadow: {
-                        soft: '0 10px 30px rgba(15, 23, 42, 0.06)'
+                        soft: '0 10px 30px rgba(8, 8, 8, 0.12)'
                     },
                     borderRadius: {
                         xl2: '1.25rem'
@@ -36,43 +60,52 @@ $currentPath = current_path();
     <style>
         :root {
             color-scheme: light;
+            --glass-bg: rgba(255, 255, 255, 0.18);
+            --glass-border: rgba(255, 255, 255, 0.35);
+            --glass-shadow: 0 20px 60px rgba(8, 8, 8, 0.12);
+            --glass-blur: blur(18px);
         }
         body {
-            background: #F8FAFC;
+            background: radial-gradient(1200px 600px at 10% 10%, rgba(20, 110, 245, 0.18), transparent),
+                        radial-gradient(1000px 500px at 90% 0%, rgba(122, 61, 255, 0.16), transparent),
+                        radial-gradient(900px 450px at 50% 100%, rgba(237, 82, 203, 0.12), transparent),
+                        #F0F0F0;
+            color: #080808;
         }
         .card {
-            background: rgba(255,255,255,0.25);
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 1rem;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: var(--glass-blur) saturate(160%);
+            -webkit-backdrop-filter: var(--glass-blur) saturate(160%);
         }
         .soft-input {
-            border-radius: 0.75rem;
-            border: 1px solid #E2E8F0;
-            background: #ffffff;
+            border-radius: 0.85rem;
+            border: 1px solid #D8D8D8;
+            background: rgba(255, 255, 255, 0.9);
+            color: #080808;
         }
         .soft-input:focus {
             outline: none;
-            border-color: #1D4ED8;
-            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+            border-color: #146EF5;
+            box-shadow: 0 0 0 3px rgba(20, 110, 245, 0.25);
         }
         .soft-btn {
-            border-radius: 0.75rem;
+            border-radius: 0.85rem;
             font-weight: 600;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         .soft-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 14px 28px rgba(8, 8, 8, 0.14);
         }
         .chip {
             border-radius: 9999px;
-            border: 1px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.25);
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur) saturate(160%);
+            -webkit-backdrop-filter: var(--glass-blur) saturate(160%);
         }
         .nav-pill {
             border-radius: 1rem;
@@ -106,6 +139,14 @@ $currentPath = current_path();
             opacity: 1;
             transform: translateY(0);
         }
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: var(--glass-blur) saturate(160%);
+            -webkit-backdrop-filter: var(--glass-blur) saturate(160%);
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -117,7 +158,6 @@ $currentPath = current_path();
                     <?php if ($logo): ?>
                         <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-8">
                     <?php endif; ?>
-                    <span>GetSMS</span>
                 </a>
                 <div class="hidden md:flex items-center space-x-4">
                     <?php if (!$user): ?>
@@ -216,8 +256,8 @@ $currentPath = current_path();
                 ['href' => '/help', 'label' => 'Help Center', 'icon' => 'life-buoy'],
             ];
         ?>
-        <div class="flex min-h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden w-full backdrop-blur-xl" style="width:100vw;">
-            <aside class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-hidden backdrop-blur-xl">
+        <div class="flex h-screen bg-slate-50/60 border border-slate-200 rounded-xl overflow-hidden w-full backdrop-blur-xl" style="width:100vw;">
+            <aside class="hidden md:flex w-72 bg-white/60 border-r border-slate-200 flex-col h-full overflow-y-auto backdrop-blur-xl">
                 <div class="p-5 border-b border-slate-200 flex items-center space-x-3">
                     <?php $logo = setting('logo_path'); ?>
                     <?php if ($logo): ?>
@@ -342,6 +382,52 @@ $currentPath = current_path();
                 <?php endforeach; ?>
             </div>
         </nav>
+    <?php endif; ?>
+
+    <?php $hideFooter = ($currentPath === '/dashboard' || str_starts_with($currentPath, '/admin')); ?>
+    <?php if (!$hideFooter): ?>
+        <footer class="mt-10 border-t border-slate-200 bg-white/70 backdrop-blur">
+            <div class="max-w-6xl mx-auto px-4 py-10">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <?php $logo = setting('logo_path'); ?>
+                            <?php if ($logo): ?>
+                                <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-9">
+                            <?php endif; ?>
+                            <span class="text-sm text-slate-500">Secure digital services.</span>
+                        </div>
+                        <p class="text-sm text-slate-600">Connect, purchase, and manage services with confidence.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold">Legal</h4>
+                        <ul class="mt-3 space-y-2 text-sm text-slate-600">
+                            <li><a href="<?= url('/terms') ?>" class="hover:text-primary">Terms &amp; Conditions</a></li>
+                            <li><a href="<?= url('/privacy') ?>" class="hover:text-primary">Privacy Policy</a></li>
+                            <li><a href="<?= url('/returns') ?>" class="hover:text-primary">Return Policy</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold">Connect</h4>
+                        <div class="mt-3 flex items-center gap-3">
+                            <a href="#" class="glass-panel p-2 text-slate-700 hover:text-primary" aria-label="Twitter">
+                                <i data-lucide="twitter" class="w-4 h-4"></i>
+                            </a>
+                            <a href="#" class="glass-panel p-2 text-slate-700 hover:text-primary" aria-label="Facebook">
+                                <i data-lucide="facebook" class="w-4 h-4"></i>
+                            </a>
+                            <a href="#" class="glass-panel p-2 text-slate-700 hover:text-primary" aria-label="Instagram">
+                                <i data-lucide="instagram" class="w-4 h-4"></i>
+                            </a>
+                            <a href="#" class="glass-panel p-2 text-slate-700 hover:text-primary" aria-label="LinkedIn">
+                                <i data-lucide="linkedin" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 text-xs text-slate-500">© <?= date('Y') ?> GetSMS. All rights reserved.</div>
+            </div>
+        </footer>
     <?php endif; ?>
 
     <script>

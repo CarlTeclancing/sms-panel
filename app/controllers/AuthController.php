@@ -23,9 +23,11 @@ class AuthController
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
+        $phoneNumber = trim($_POST['phone_number'] ?? '');
+        $country = trim($_POST['country'] ?? '');
         $referralCode = trim($_POST['referral_code'] ?? '');
 
-        if (!$name || !$email || !$password) {
+        if (!$name || !$email || !$password || !$phoneNumber || !$country) {
             flash('error', 'All fields are required.');
             redirect('/register');
         }
@@ -52,6 +54,8 @@ class AuthController
         $userId = $this->users->create([
             'name' => $name,
             'email' => $email,
+            'phone_number' => $phoneNumber,
+            'country' => $country,
             'password_hash' => password_hash($password, PASSWORD_BCRYPT),
             'role' => 'user',
             'balance' => 0,

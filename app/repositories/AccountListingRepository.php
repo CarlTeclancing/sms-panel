@@ -68,6 +68,24 @@ class AccountListingRepository
         return $stmt->fetchAll();
     }
 
+    public function allPendingWithSeller(): array
+    {
+        $stmt = db()->query("SELECT al.*, u.name AS seller_name, u.email AS seller_email FROM account_listings al JOIN users u ON u.id = al.seller_id WHERE al.status = 'pending' ORDER BY al.id DESC");
+        return $stmt->fetchAll();
+    }
+
+    public function allApprovedWithSeller(): array
+    {
+        $stmt = db()->query("SELECT al.*, u.name AS seller_name, u.email AS seller_email, buyer.name AS buyer_name, buyer.email AS buyer_email FROM account_listings al JOIN users u ON u.id = al.seller_id LEFT JOIN users buyer ON buyer.id = al.buyer_id WHERE al.status = 'approved' ORDER BY al.id DESC");
+        return $stmt->fetchAll();
+    }
+
+    public function allSoldWithSeller(): array
+    {
+        $stmt = db()->query("SELECT al.*, u.name AS seller_name, u.email AS seller_email, buyer.name AS buyer_name, buyer.email AS buyer_email FROM account_listings al JOIN users u ON u.id = al.seller_id LEFT JOIN users buyer ON buyer.id = al.buyer_id WHERE al.status = 'sold' ORDER BY al.id DESC");
+        return $stmt->fetchAll();
+    }
+
     public function findById(int $id): ?array
     {
         $stmt = db()->prepare('SELECT * FROM account_listings WHERE id = ? LIMIT 1');

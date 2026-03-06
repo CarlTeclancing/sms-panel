@@ -15,8 +15,8 @@ $sidebarItems = [
 $currentPath = current_path();
 ?>
 
-<div class="flex min-h-screen w-full bg-slate-50 overflow-hidden">
-    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-full overflow-hidden fixed md:static inset-y-0 left-0 z-40">
+<div class="flex h-screen w-full bg-slate-50 overflow-hidden">
+    <aside id="adminSidebar" class="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col h-screen overflow-y-auto fixed md:static inset-y-0 left-0 z-40">
         <div class="p-5 border-b border-slate-200 flex items-center justify-between">
             <?php if (!empty($logo)): ?>
                 <img src="<?= htmlspecialchars(url($logo)) ?>" alt="Logo" class="h-10">
@@ -109,7 +109,7 @@ $currentPath = current_path();
                                 <tr class="border-b border-slate-100">
                                     <td class="p-3"><?= htmlspecialchars($tx['user_id']) ?></td>
                                     <td class="p-3"><?= htmlspecialchars($tx['type']) ?></td>
-                                    <td class="p-3">$<?= number_format((float)$tx['amount'], 2) ?></td>
+                                    <td class="p-3">XAF <?= number_format((float)$tx['amount'], 2) ?></td>
                                     <td class="p-3"><?= htmlspecialchars($tx['status']) ?></td>
                                 </tr>
                             <?php endforeach; ?>

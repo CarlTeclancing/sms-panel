@@ -46,7 +46,7 @@ $user = current_user();
                             <p class="text-sm text-slate-600 mt-2"><?= htmlspecialchars($listing['description']) ?></p>
                         <?php endif; ?>
                         <div class="mt-auto pt-4">
-                            <div class="text-lg font-semibold text-primary">$<?= number_format((float)$listing['price'], 2) ?></div>
+                            <div class="text-lg font-semibold text-primary">XAF <?= number_format((float)$listing['price'], 2) ?></div>
                             <?php if ($user): ?>
                                 <form method="post" action="<?= url('/accounts/buy') ?>" class="mt-3">
                                     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">

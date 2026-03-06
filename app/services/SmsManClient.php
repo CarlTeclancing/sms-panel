@@ -82,7 +82,7 @@ class SmsManClient
         return $this->requestCached('get-prices', ['country_id' => $countryId], 300);
     }
 
-    public function getNumber(int $countryId, int $applicationId, ?int $maxPrice = null, string $currency = 'USD', ?bool $hasMultipleSms = null): array
+    public function getNumber(int $countryId, int $applicationId, ?int $maxPrice = null, string $currency = 'XAF', ?bool $hasMultipleSms = null): array
     {
         $params = [
             'country_id' => $countryId,

@@ -27,7 +27,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="p-3"><?= htmlspecialchars($purchase['status']) ?></td>
-                                <td class="p-3">$<?= number_format((float)$purchase['cost'], 2) ?></td>
+                                <td class="p-3">XAF <?= number_format((float)$purchase['cost'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -58,7 +58,7 @@
                                     </td>
                                     <td class="p-3"><?= (int)$order['quantity'] ?></td>
                                     <td class="p-3"><?= htmlspecialchars($order['status']) ?></td>
-                                    <td class="p-3">$<?= number_format((float)($order['charge'] ?? 0), 4) ?></td>
+                                    <td class="p-3">XAF <?= number_format((float)($order['charge'] ?? 0), 4) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -70,9 +70,9 @@
     <div>
         <div class="bg-primary text-white rounded p-4">
             <p class="text-sm">Total balance</p>
-            <p class="text-2xl font-semibold">$<?= number_format((float)current_user()['balance'], 2) ?></p>
-            <p class="text-xs mt-2">Top up: $<?= number_format((float)(current_user()['balance_topup'] ?? current_user()['balance'] ?? 0), 2) ?></p>
-            <p class="text-xs">Earnings: $<?= number_format((float)(current_user()['balance_earnings'] ?? 0), 2) ?></p>
+            <p class="text-2xl font-semibold">XAF <?= number_format((float)current_user()['balance'], 2) ?></p>
+            <p class="text-xs mt-2">Top up: XAF <?= number_format((float)(current_user()['balance_topup'] ?? current_user()['balance'] ?? 0), 2) ?></p>
+            <p class="text-xs">Earnings: XAF <?= number_format((float)(current_user()['balance_earnings'] ?? 0), 2) ?></p>
             <a href="<?= url('/wallet') ?>" class="inline-block mt-3 bg-white text-primary px-4 py-2 rounded">Refill</a>
         </div>
         <div class="mt-6 border border-slate-200 rounded p-4">
@@ -100,7 +100,7 @@
                         <li class="border border-slate-200 rounded px-3 py-2">
                             <div class="flex justify-between">
                                 <span><?= htmlspecialchars($tx['type']) ?></span>
-                                <span><?= number_format((float)$tx['amount'], 2) ?></span>
+                                <span>XAF <?= number_format((float)$tx['amount'], 2) ?></span>
                             </div>
                             <p class="text-slate-500 text-xs"><?= htmlspecialchars($tx['status']) ?> · <?= htmlspecialchars($tx['created_at']) ?></p>
                         </li>
