@@ -185,3 +185,9 @@ function send_email(string $to, string $subject, string $message): bool
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     return @mail($to, $subject, $message, $headers);
 }
+
+function getFlag(string $code, string $classes = "w-6 h-4"): string
+{
+    $src = "https://flagcdn.com/" . strtolower($code) . ".svg";
+    return "<img src='$src' class='$classes shadow-sm border border-gray-100 rounded-sm' alt='Flag of $code'>";
+}
